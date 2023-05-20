@@ -5,5 +5,9 @@ package xieliangji.automation.junitext;
  */
 public interface TestNamed {
 
+    /**
+     * supply test name from the parameterized test parameter <test data>.
+     * @return - the test name
+     */
     String getTestName();
 }
