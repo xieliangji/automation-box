@@ -12,7 +12,7 @@ public class PlaywrightRunner {
              Page page = context.newPage();
         ){
             page.navigate("https://google.com/ncr");
-            PlaywrightAssertions.assertThat(page).hasTitle("Google");
+            PlaywrightAssertions.assertThat(page).hasTitle("Google"); // :Google
             Thread.sleep(2000);
         }
     }
