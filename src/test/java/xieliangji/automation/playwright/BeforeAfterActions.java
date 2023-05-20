@@ -7,8 +7,13 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.awt.*;
 
+@SuppressWarnings("unused")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class BeforeAfterActions {
+
+    private static final String BROWSER_CHROME = "chrome";
+    private static final String BROWSER_WEBKIT = "webkit";
+    private static final String BROWSER_FIREFOX = "firefox";
 
     protected Playwright playwright;
     protected Browser browser;
@@ -30,8 +35,8 @@ public class BeforeAfterActions {
         String browserType = System.getenv("BROWSER_TYPE");
         browserType = browserType == null ? "" : browserType;
         switch (browserType) {
-            case "webkit" -> browser = playwright.webkit().launch(getLaunchOptions(browserType));
-            case "firefox" -> browser = playwright.firefox().launch(getLaunchOptions(browserType));
+            case BROWSER_WEBKIT -> browser = playwright.webkit().launch(getLaunchOptions(browserType));
+            case BROWSER_FIREFOX -> browser = playwright.firefox().launch(getLaunchOptions(browserType));
             default -> browser = playwright.chromium().launch(getLaunchOptions(browserType));
         }
         context = browser.newContext(

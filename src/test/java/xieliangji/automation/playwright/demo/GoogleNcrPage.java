@@ -18,7 +18,6 @@ public class GoogleNcrPage {
     }
 
     public GoogleNcrPage navigate() {
-
         page.navigate(URL);
         return this;
     }
