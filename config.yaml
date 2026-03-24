@@ -1,0 +1,58 @@
+app:
+  package_name: com.ugreen.iot
+  launch_activity: .ui.SplashActivity
+run:
+  max_steps: 200
+  post_action_wait_ms: 500
+  seed: 12345
+  benchmark_baseline_dir: ''
+policy:
+  epsilon: 0.2
+  top_k: 5
+  no_progress_threshold: 8
+  same_state_threshold: 5
+  out_of_app_threshold: 2
+  enable_text_input: true
+  enable_long_click: true
+  enable_restart_app: true
+  enable_session_guardrails: true
+  enable_login_bootstrap: false
+  bootstrap_username: ''
+  bootstrap_password: ''
+  bootstrap_max_attempts: 3
+  bootstrap_retry_interval_steps: 20
+  prefer_functional_pages: true
+score_weights:
+  novelty: 2.0
+  transition: 2.5
+  depth: 1.8
+  business: 1.4
+  escape: 2.2
+  input: 1.2
+  repeat: 2.4
+  risk: 3.0
+  stuck: 2.6
+safety:
+  blacklist_keywords:
+  - 删除
+  - 恢复出厂
+  - 付款
+  - 购买
+  - 退出登录
+  whitelist_keywords:
+  - 下一步
+  - 继续
+  - 允许
+  - 确定
+  - 进入
+  - 登录
+  - 保存
+snapshot:
+  enabled: true
+  every_n_steps: 10
+  on_issue: true
+features:
+  use_runtime_extractor: true
+  use_runtime_scorer: true
+  enable_watchdog: true
+  export_replay: true

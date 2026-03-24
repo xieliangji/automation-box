@@ -1,0 +1,113 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from smart_monkey.report.coverage_benchmark import CoverageBenchmarkGenerator
+
+
+def _write_jsonl(path: Path, rows: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n", encoding="utf-8")
+
+
+def _write_state(path: Path, state_id: str, app_flags: list[str], elements: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "state_id": state_id,
+        "app_flags": app_flags,
+        "elements": elements,
+    }
+    path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+
+def test_coverage_benchmark_generates_current_and_comparison(tmp_path: Path) -> None:
+    current = tmp_path / "current"
+    baseline = tmp_path / "baseline"
+    for run in (current, baseline):
+        (run / "report").mkdir(parents=True, exist_ok=True)
+        (run / "states").mkdir(parents=True, exist_ok=True)
+        (run / "issues").mkdir(parents=True, exist_ok=True)
+        _write_jsonl(
+            run / "steps.jsonl",
+            [
+                {
+                    "step": 0,
+                    "current_state_id": "s_login",
+                    "next_state_id": "s_home",
+                    "action_type": "click",
+                    "changed": True,
+                    "out_of_app": False,
+                },
+                {
+                    "step": 1,
+                    "current_state_id": "s_home",
+                    "next_state_id": "s_feature",
+                    "action_type": "click",
+                    "changed": True,
+                    "out_of_app": False,
+                },
+                {
+                    "step": -1,
+                    "recovery_strategy": "restart_to_checkpoint",
+                    "recovery_validation_in_target_app": True,
+                },
+            ],
+        )
+        _write_jsonl(
+            run / "transitions.jsonl",
+            [
+                {"from_state_id": "s_login", "to_state_id": "s_home"},
+                {"from_state_id": "s_home", "to_state_id": "s_feature"},
+            ],
+        )
+        _write_state(
+            run / "states" / "s_login.json",
+            "s_login",
+            ["login_page"],
+            [{"resource_id": "com.demo:id/btn_login", "text": "登录"}],
+        )
+        _write_state(
+            run / "states" / "s_home.json",
+            "s_home",
+            ["list_page"],
+            [{"resource_id": "com.demo:id/home_tab", "text": "首页"}],
+        )
+        _write_state(
+            run / "states" / "s_feature.json",
+            "s_feature",
+            ["form_page"],
+            [{"resource_id": "com.demo:id/save", "text": "保存"}],
+        )
+        issue_dir = run / "issues" / "out_of_app_1"
+        issue_dir.mkdir(parents=True, exist_ok=True)
+        (issue_dir / "summary.json").write_text(
+            json.dumps({"issue_type": "out_of_app"}, ensure_ascii=False), encoding="utf-8"
+        )
+
+    # make baseline slightly worse
+    _write_jsonl(
+        baseline / "steps.jsonl",
+        [
+            {
+                "step": 0,
+                "current_state_id": "s_login",
+                "next_state_id": "s_login",
+                "action_type": "wait",
+                "changed": False,
+                "out_of_app": True,
+            },
+            {"step": -1, "recovery_strategy": "restart_app", "recovery_validation_in_target_app": False},
+        ],
+    )
+
+    generator = CoverageBenchmarkGenerator(current, baseline_dir=baseline)
+    path = generator.generate()
+    payload = json.loads(path.read_text(encoding="utf-8"))
+
+    assert "current_run" in payload
+    assert "comparison" in payload
+    assert payload["current_run"]["runtime_steps"] >= 1
+    assert "composite_score" in payload["current_run"]
+    assert "composite_score" in payload["comparison"]
+

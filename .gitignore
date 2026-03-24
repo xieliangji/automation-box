@@ -2,3 +2,5 @@
 target
 allure-results
 allure-report
+.github
+output
