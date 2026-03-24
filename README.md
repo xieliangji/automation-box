@@ -16,6 +16,11 @@
 
 ## 快速开始
 
+环境要求：
+
+- Python `3.11+`
+- ADB 已安装并加入 PATH
+
 1. 创建虚拟环境并安装依赖
 
 ```bash
@@ -25,10 +30,25 @@ source .venv/bin/activate
 ./.venv/bin/python -m pip install pytest
 ```
 
+Windows PowerShell：
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e .
+python -m pip install pytest
+```
+
 2. 复制配置并修改目标应用
 
 ```bash
 cp config.example.yaml config.yaml
+```
+
+Windows PowerShell：
+
+```powershell
+copy config.example.yaml config.yaml
 ```
 
 必改字段：
@@ -63,16 +83,34 @@ adb shell cmd package resolve-activity --brief <package>/<activity>
 ./.venv/bin/python -m pytest -q
 ```
 
+Windows PowerShell：
+
+```powershell
+python -m pytest -q
+```
+
 单文件：
 
 ```bash
 ./.venv/bin/python -m pytest -q tests/test_parser.py
 ```
 
+Windows PowerShell：
+
+```powershell
+python -m pytest -q tests/test_parser.py
+```
+
 单用例：
 
 ```bash
 ./.venv/bin/python -m pytest -q tests/test_parser.py::test_parser_marks_permission_and_list_page
+```
+
+Windows PowerShell：
+
+```powershell
+python -m pytest -q tests/test_parser.py::test_parser_marks_permission_and_list_page
 ```
 
 ## 架构概览
@@ -100,3 +138,9 @@ adb shell cmd package resolve-activity --brief <package>/<activity>
 - `output/run/runtime.log`
 
 日志包含每一步执行动作（action_type/action_id/state/score）、状态迁移、out_of_app 触发与恢复结果，便于快速回溯问题。
+
+查看报告（Windows PowerShell）：
+
+```powershell
+start .\output\run\report\index.html
+```

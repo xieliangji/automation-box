@@ -25,7 +25,7 @@
 ### 2.1 本机环境
 
 - macOS / Linux（Windows 也可，但命令略有差异）
-- Python 3.10+
+- Python 3.11+
 - ADB 可用（`adb devices` 能看到手机）
 
 ### 2.2 手机环境
@@ -64,10 +64,25 @@ source .venv/bin/activate
 ./.venv/bin/python -m pip install pytest
 ```
 
+Windows PowerShell：
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e .
+python -m pip install pytest
+```
+
 ### 3.2 生成配置文件
 
 ```bash
 cp config.example.yaml config.yaml
+```
+
+Windows PowerShell：
+
+```powershell
+copy config.example.yaml config.yaml
 ```
 
 ### 3.3 修改配置（最少改这几个）
@@ -121,6 +136,12 @@ cp config.example.yaml config.yaml
 
 ```bash
 ./.venv/bin/python main.py
+```
+
+Windows PowerShell：
+
+```powershell
+python main.py
 ```
 
 运行过程中手机会被自动点击/输入/返回，这是正常行为。
@@ -255,4 +276,13 @@ PY
 
 ```bash
 open output/run/report/index.html
+```
+
+Windows PowerShell：
+
+```powershell
+copy config.example.yaml config.yaml
+python -c "import yaml;from pathlib import Path;p=Path('config.yaml');d=yaml.safe_load(p.read_text(encoding='utf-8'));d['app']['package_name']='com.ugreen.iot';d['app']['launch_activity']='.ui.SplashActivity';d['run']['max_steps']=200;p.write_text(yaml.safe_dump(d,allow_unicode=True,sort_keys=False),encoding='utf-8')"
+python main.py
+start .\output\run\report\index.html
 ```

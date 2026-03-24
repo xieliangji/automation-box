@@ -18,6 +18,12 @@
 cp config.example.yaml config.yaml
 ```
 
+Windows PowerShell：
+
+```powershell
+copy config.example.yaml config.yaml
+```
+
 2. 修改目标应用
 
 - `app.package_name`
@@ -27,6 +33,18 @@ cp config.example.yaml config.yaml
 
 ```bash
 python main.py
+```
+
+Windows PowerShell：
+
+```powershell
+python main.py
+```
+
+查看报告（Windows PowerShell）：
+
+```powershell
+start .\output\run\report\index.html
 ```
 
 ## 当前能力
