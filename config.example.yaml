@@ -7,6 +7,11 @@ run:
   post_action_wait_ms: 1200
   seed: 12345
   benchmark_baseline_dir: ""
+  profile: functional
+  crash_stress_wait_ms: 200
+  crash_stress_burst_probability: 0.25
+  crash_stress_burst_min_steps: 2
+  crash_stress_burst_max_steps: 5
 
 policy:
   epsilon: 0.2
@@ -16,6 +21,9 @@ policy:
   out_of_app_threshold: 2
   enable_text_input: true
   enable_long_click: true
+  enable_pinch: true
+  pinch_zoom_context_boost: 0.45
+  pinch_non_zoom_penalty: 0.6
   enable_restart_app: true
   enable_session_guardrails: true
   enable_login_bootstrap: false
@@ -62,3 +70,18 @@ features:
   use_runtime_scorer: true
   enable_watchdog: true
   export_replay: true
+
+learning:
+  enabled: false
+  alpha: 0.8
+  ucb_exploration: 1.2
+  module_bucket_enabled: true
+  reward_changed_state: 1.0
+  reward_novel_state: 0.3
+  reward_functional_page: 0.4
+  reward_issue_signal: 0.8
+  penalty_out_of_app: 1.0
+  penalty_unchanged: 0.2
+  penalty_recent_loop: 0.25
+  penalty_system_action: 0.15
+  top_arms_report_limit: 5

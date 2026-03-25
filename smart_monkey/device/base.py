@@ -34,6 +34,20 @@ class DeviceDriver(Protocol):
     def swipe(self, x1: int, y1: int, x2: int, y2: int, duration_ms: int = 300) -> bool:
         ...
 
+    def pinch(
+        self,
+        x1_start: int,
+        y1_start: int,
+        x1_end: int,
+        y1_end: int,
+        x2_start: int,
+        y2_start: int,
+        x2_end: int,
+        y2_end: int,
+        duration_ms: int = 280,
+    ) -> bool:
+        ...
+
     def press_back(self) -> bool:
         ...
 

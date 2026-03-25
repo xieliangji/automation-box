@@ -13,6 +13,8 @@ class ActionType(str, Enum):
     LONG_CLICK = "long_click"
     INPUT = "input"
     SWIPE = "swipe"
+    PINCH_IN = "pinch_in"
+    PINCH_OUT = "pinch_out"
     BACK = "back"
     HOME = "home"
     WAIT = "wait"

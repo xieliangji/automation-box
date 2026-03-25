@@ -59,4 +59,11 @@ class RuntimeHooks:
 
     def on_run_finish(self, recorder: Any, utg: Any) -> dict[str, str]:
         recorder.record_utg(utg)
+        if self.telemetry_service.runtime_metrics:
+            recorder.record_step(
+                {
+                    "step": -1,
+                    "runtime_metrics": self.telemetry_service.runtime_metrics,
+                }
+            )
         return self.report_service.generate_all()

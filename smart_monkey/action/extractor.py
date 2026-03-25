@@ -89,6 +89,57 @@ class ActionExtractor:
                     tags=element.semantic_tokens() | {"scroll"},
                 )
             )
+            if self.config.policy.enable_pinch:
+                width = max(1, right - left)
+                height = max(1, bottom - top)
+                center_y = (top + bottom) // 2
+                # Two-finger gestures within current scrollable region.
+                delta_x = max(20, min(width // 4, 240))
+                delta_y = max(20, min(height // 4, 240))
+                pinch_in_params = {
+                    "x1_start": max(left + 5, center_x - delta_x),
+                    "y1_start": max(top + 5, center_y - delta_y),
+                    "x1_end": center_x,
+                    "y1_end": center_y,
+                    "x2_start": min(right - 5, center_x + delta_x),
+                    "y2_start": min(bottom - 5, center_y + delta_y),
+                    "x2_end": center_x,
+                    "y2_end": center_y,
+                    "duration_ms": 280,
+                    "gesture": "pinch_in",
+                }
+                pinch_out_params = {
+                    "x1_start": center_x,
+                    "y1_start": center_y,
+                    "x1_end": max(left + 5, center_x - delta_x),
+                    "y1_end": max(top + 5, center_y - delta_y),
+                    "x2_start": center_x,
+                    "y2_start": center_y,
+                    "x2_end": min(right - 5, center_x + delta_x),
+                    "y2_end": min(bottom - 5, center_y + delta_y),
+                    "duration_ms": 280,
+                    "gesture": "pinch_out",
+                }
+                actions.append(
+                    Action(
+                        action_id=self._new_id(),
+                        action_type=ActionType.PINCH_IN,
+                        target_element_id=element.element_id,
+                        params=pinch_in_params,
+                        source_state_id=state.state_id,
+                        tags=element.semantic_tokens() | {"zoom", "pinch_in"},
+                    )
+                )
+                actions.append(
+                    Action(
+                        action_id=self._new_id(),
+                        action_type=ActionType.PINCH_OUT,
+                        target_element_id=element.element_id,
+                        params=pinch_out_params,
+                        source_state_id=state.state_id,
+                        tags=element.semantic_tokens() | {"zoom", "pinch_out"},
+                    )
+                )
 
         return actions
 

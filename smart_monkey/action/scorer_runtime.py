@@ -21,7 +21,9 @@ class RuntimeActionScorer(ActionScorer):
         detail["stuck_penalty"] = max(detail["stuck_penalty"], self._history_stuck_penalty(history))
         detail["depth"] = min(1.5, detail["depth"] + self._list_depth_bonus(action, state))
         detail["business"] = min(1.8, detail["business"] + self._functional_page_bonus(action, state))
+        detail["business"] = min(1.8, detail["business"] + self._pinch_context_bonus(action, state))
         detail["repeat_penalty"] = max(detail["repeat_penalty"], self._functional_page_penalty(action, state))
+        detail["repeat_penalty"] = max(detail["repeat_penalty"], self._pinch_context_penalty(action, state))
         return detail
 
     @staticmethod
@@ -86,3 +88,78 @@ class RuntimeActionScorer(ActionScorer):
         if action.action_type.value in {"wait", "restart_app", "back"}:
             return 1.0
         return 0.6
+
+    def _pinch_context_bonus(self, action: Action, state: DeviceState) -> float:
+        if action.action_type.value not in {"pinch_in", "pinch_out"}:
+            return 0.0
+        if self._looks_like_zoom_context(state, action):
+            boost = float(getattr(self.config.policy, "pinch_zoom_context_boost", 0.45))
+            return max(0.0, min(1.0, boost))
+        return 0.0
+
+    def _pinch_context_penalty(self, action: Action, state: DeviceState) -> float:
+        if action.action_type.value not in {"pinch_in", "pinch_out"}:
+            return 0.0
+        if self._looks_like_zoom_context(state, action):
+            return 0.0
+        penalty = float(getattr(self.config.policy, "pinch_non_zoom_penalty", 0.6))
+        return max(0.0, min(2.0, penalty))
+
+    @staticmethod
+    def _looks_like_zoom_context(state: DeviceState, action: Action) -> bool:
+        flags = {str(flag).lower() for flag in state.app_flags}
+        if "webview" in flags:
+            return True
+        activity = str(state.activity_name or "").lower()
+        activity_keywords = (
+            "map",
+            "image",
+            "photo",
+            "preview",
+            "camera",
+            "gallery",
+            "album",
+            "viewer",
+            "pdf",
+            "canvas",
+            "chart",
+            "webview",
+        )
+        if any(keyword in activity for keyword in activity_keywords):
+            return True
+        tokens = set()
+        for element in state.elements:
+            tokens.update(str(token).lower() for token in element.semantic_tokens())
+        synthetic_gesture_tokens = {"zoom", "pinch", "pinch_in", "pinch_out", "scroll", "swipe", "gesture"}
+        tokens.update(
+            str(tag).lower()
+            for tag in action.tags
+            if str(tag).lower() not in synthetic_gesture_tokens
+        )
+        zoom_keywords = {
+            "map",
+            "地图",
+            "image",
+            "图片",
+            "photo",
+            "照片",
+            "preview",
+            "预览",
+            "camera",
+            "相机",
+            "canvas",
+            "画布",
+            "chart",
+            "图表",
+            "graph",
+            "pdf",
+            "doc",
+            "document",
+            "viewer",
+            "album",
+            "gallery",
+            "thumbnail",
+            "zoom",
+            "pinch",
+        }
+        return bool(tokens & zoom_keywords)

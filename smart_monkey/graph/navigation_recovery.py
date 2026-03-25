@@ -94,6 +94,18 @@ class NavigationRecovery:
                     params.get("y2", 0),
                     params.get("duration_ms", 300),
                 )
+            elif action_type in {"pinch_in", "pinch_out"}:
+                driver.pinch(
+                    params.get("x1_start", 0),
+                    params.get("y1_start", 0),
+                    params.get("x1_end", 0),
+                    params.get("y1_end", 0),
+                    params.get("x2_start", 0),
+                    params.get("y2_start", 0),
+                    params.get("x2_end", 0),
+                    params.get("y2_end", 0),
+                    params.get("duration_ms", 280),
+                )
             elif action_type == "back":
                 driver.press_back()
             else:
@@ -128,7 +140,7 @@ class NavigationRecovery:
         selected: list[dict[str, Any]] = []
         for row in rows:
             action = row.get("action", {})
-            if action.get("action_type") not in {"click", "long_click", "input", "swipe", "back"}:
+            if action.get("action_type") not in {"click", "long_click", "input", "swipe", "pinch_in", "pinch_out", "back"}:
                 continue
             if self._is_login_regressive(action):
                 continue

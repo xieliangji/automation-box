@@ -45,6 +45,26 @@ class FakeDriver:
         self.actions.append(("swipe", (x1, y1, x2, y2, duration_ms)))
         return True
 
+    def pinch(
+        self,
+        x1_start: int,
+        y1_start: int,
+        x1_end: int,
+        y1_end: int,
+        x2_start: int,
+        y2_start: int,
+        x2_end: int,
+        y2_end: int,
+        duration_ms: int = 280,
+    ) -> bool:
+        self.actions.append(
+            (
+                "pinch",
+                (x1_start, y1_start, x1_end, y1_end, x2_start, y2_start, x2_end, y2_end, duration_ms),
+            )
+        )
+        return True
+
     def press_back(self) -> bool:
         self.actions.append(("back", ()))
         return True
@@ -89,6 +109,20 @@ class StubExtractor:
 class StubScorer:
     def score(self, state, actions, stats):
         return actions
+
+
+class StubCrashFlagExtractor:
+    def extract(self, state):
+        return [
+            Action(
+                action_id="a1",
+                action_type=ActionType.WAIT,
+                target_element_id=None,
+                params={"duration_ms": 1},
+                source_state_id=state.state_id,
+                tags={"wait"},
+            )
+        ]
 
 
 class RecommendedRecoveryHarness(SmartMonkeyAppRuntime):
@@ -160,3 +194,113 @@ def test_runtime_app_records_recovery_artifacts(tmp_path: Path) -> None:
     assert recovery_rows
     assert recovery_rows[-1]["recovery_strategy"] == "restart_to_checkpoint"
     assert recovery_rows[-1]["recovery_validation_exact_anchor_hit"] is True
+
+
+def test_runtime_recovery_rows_keep_profile_fields(tmp_path: Path) -> None:
+    config = RuntimeConfig()
+    config.run.max_steps = 1
+    config.run.profile = "crash_stress"
+    config.snapshot.enabled = False
+    driver = FakeDriver()
+    app = RecommendedRecoveryHarness(
+        driver=driver,
+        config=config,
+        output_dir=tmp_path,
+        states=[make_state("state-a"), make_state("state-b"), make_state("state-c")],
+    )
+
+    app.run()
+
+    steps = [json.loads(line) for line in (tmp_path / "steps.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    runtime_rows = [row for row in steps if isinstance(row.get("step"), int) and row.get("step", -1) >= 0]
+    assert runtime_rows
+    assert runtime_rows[0]["run_profile"] == "crash_stress"
+
+
+def test_runtime_detects_anr_signal_from_state_text(tmp_path: Path) -> None:
+    config = RuntimeConfig()
+    config.run.max_steps = 1
+    config.snapshot.enabled = False
+    driver = FakeDriver()
+    state_before = make_state("state-a")
+    state_after = DeviceState(
+        state_id="state-b",
+        raw_hash="state-b",
+        stable_hash="state-b",
+        package_name="com.demo.app",
+        activity_name=".MainActivity",
+        screen_size=(1080, 1920),
+        elements=[],
+        app_flags={"list_page"},
+    )
+    state_after.elements = []
+    app = RecommendedRecoveryHarness(
+        driver=driver,
+        config=config,
+        output_dir=tmp_path,
+        states=[state_before, state_after],
+    )
+
+    # Inject one node with ANR-like text through UIElement-like payload using parser-independent state
+    from smart_monkey.models import UIElement
+
+    state_after.elements = [
+        UIElement(
+            element_id="e1",
+            class_name="android.widget.TextView",
+            text="App isn't responding",
+            content_desc="",
+            resource_id="",
+            package_name="com.demo.app",
+            clickable=False,
+            long_clickable=False,
+            scrollable=False,
+            checkable=False,
+            checked=False,
+            enabled=True,
+            focusable=False,
+            focused=False,
+            editable=False,
+            visible_bounds=(0, 0, 100, 50),
+            depth=1,
+            xpath="/",
+        )
+    ]
+    app.extractor = StubCrashFlagExtractor()
+    app.scorer = StubScorer()
+
+    app.run()
+
+    transitions = [
+        json.loads(line)
+        for line in (tmp_path / "transitions.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert transitions
+    assert transitions[0]["anr"] is True
+
+
+def test_runtime_learning_reward_penalizes_system_actions(tmp_path: Path) -> None:
+    config = RuntimeConfig()
+    config.run.max_steps = 1
+    config.snapshot.enabled = False
+    config.learning.enabled = True
+    config.learning.penalty_system_action = 0.5
+    driver = FakeDriver()
+    app = RecommendedRecoveryHarness(
+        driver=driver,
+        config=config,
+        output_dir=tmp_path,
+        states=[make_state("state-a"), make_state("state-b")],
+    )
+    app.extractor = StubExtractor()
+    app.scorer = StubScorer()
+
+    app.run()
+
+    steps = [json.loads(line) for line in (tmp_path / "steps.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    runtime_rows = [row for row in steps if isinstance(row.get("step"), int) and row.get("step", -1) >= 0]
+    assert runtime_rows
+    # wait action should receive system-action penalty, but still include changed_state reward if changed
+    assert runtime_rows[0]["action_type"] == "wait"
+    assert runtime_rows[0]["learning_reward"] < 1.5

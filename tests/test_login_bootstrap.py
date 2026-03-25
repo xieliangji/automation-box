@@ -20,6 +20,26 @@ class FakeDriver:
     def wait_idle(self, timeout_ms: int = 1500) -> None:
         self.actions.append(("wait_idle", (timeout_ms,)))
 
+    def pinch(
+        self,
+        x1_start: int,
+        y1_start: int,
+        x1_end: int,
+        y1_end: int,
+        x2_start: int,
+        y2_start: int,
+        x2_end: int,
+        y2_end: int,
+        duration_ms: int = 280,
+    ) -> bool:
+        self.actions.append(
+            (
+                "pinch",
+                (x1_start, y1_start, x1_end, y1_end, x2_start, y2_start, x2_end, y2_end, duration_ms),
+            )
+        )
+        return True
+
 
 def make_login_state() -> DeviceState:
     elements = [
@@ -95,4 +115,3 @@ def test_login_bootstrap_respects_retry_and_max_attempts() -> None:
     assert cooldown.reason == "retry_cooldown"
     assert second.status == "attempted"
     assert exhausted.reason == "max_attempts_reached"
-

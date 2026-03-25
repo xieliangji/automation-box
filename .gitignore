@@ -4,3 +4,7 @@ allure-results
 allure-report
 .github
 output
+.DS_Store
+__pycache__/
+*.pyc
+config.yaml

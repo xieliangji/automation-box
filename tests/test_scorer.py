@@ -119,3 +119,85 @@ def test_runtime_scorer_functional_page_switch_affects_business_bonus() -> None:
     auth_detail = RuntimeActionScorer(auth_config)._score_one(state, action, stats)
 
     assert prefer_detail["business"] > auth_detail["business"]
+
+
+def test_runtime_scorer_treats_pinch_as_escape_candidate_when_stuck() -> None:
+    config = ProjectConfig()
+    scorer = RuntimeActionScorer(config)
+    state = make_state()
+    action = Action(
+        action_id="pinch-1",
+        action_type=ActionType.PINCH_OUT,
+        target_element_id="scroll-1",
+        params={
+            "x1_start": 500,
+            "y1_start": 900,
+            "x1_end": 350,
+            "y1_end": 750,
+            "x2_start": 500,
+            "y2_start": 900,
+            "x2_end": 650,
+            "y2_end": 1050,
+        },
+        source_state_id="state-1",
+        tags={"zoom", "pinch_out"},
+    )
+    stats = RunStats(stuck_score=8)
+
+    detail = scorer._score_one(state, action, stats)
+
+    assert detail["escape"] == 1.0
+    assert detail["depth"] >= 0.5
+
+
+def test_runtime_scorer_boosts_pinch_on_zoom_context() -> None:
+    config = ProjectConfig()
+    config.policy.pinch_zoom_context_boost = 0.5
+    scorer = RuntimeActionScorer(config)
+    state = DeviceState(
+        state_id="s-zoom",
+        raw_hash="",
+        stable_hash="",
+        package_name="com.demo.app",
+        activity_name=".MapActivity",
+        screen_size=(1080, 1920),
+        elements=[],
+        app_flags={"list_page"},
+    )
+    action = Action(
+        action_id="pinch-2",
+        action_type=ActionType.PINCH_IN,
+        target_element_id="map",
+        params={},
+        source_state_id="s-zoom",
+        tags={"map"},
+    )
+    detail = scorer._score_one(state, action, RunStats())
+    assert detail["business"] >= 0.5
+    assert detail["repeat_penalty"] == 0.0
+
+
+def test_runtime_scorer_penalizes_pinch_on_non_zoom_context() -> None:
+    config = ProjectConfig()
+    config.policy.pinch_non_zoom_penalty = 0.7
+    scorer = RuntimeActionScorer(config)
+    state = DeviceState(
+        state_id="s-plain",
+        raw_hash="",
+        stable_hash="",
+        package_name="com.demo.app",
+        activity_name=".MainActivity",
+        screen_size=(1080, 1920),
+        elements=[],
+        app_flags={"list_page"},
+    )
+    action = Action(
+        action_id="pinch-3",
+        action_type=ActionType.PINCH_OUT,
+        target_element_id="list",
+        params={},
+        source_state_id="s-plain",
+        tags={"list"},
+    )
+    detail = scorer._score_one(state, action, RunStats())
+    assert detail["repeat_penalty"] >= 0.7

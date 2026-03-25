@@ -35,7 +35,11 @@ class ActionScorer:
         transition = (history.new_state_count + 1) / (history.execute_count + 2)
         depth = self._depth_value(action)
         business = self._business_value(action)
-        escape = 1.0 if stats.stuck_score >= 6 and action.action_type.value in {"back", "restart_app", "swipe"} else 0.0
+        escape = (
+            1.0
+            if stats.stuck_score >= 6 and action.action_type.value in {"back", "restart_app", "swipe", "pinch_in", "pinch_out"}
+            else 0.0
+        )
         input_value = 1.0 if action.action_type.value == "input" else 0.0
         repeat_penalty = 1.0 if action_key in stats.recent_action_keys[-3:] else 0.0
         risk_penalty = self._risk_value(action)
@@ -76,6 +80,8 @@ class ActionScorer:
         if action.action_type.value == "click":
             return 0.6
         if action.action_type.value == "swipe":
+            return 0.5
+        if action.action_type.value in {"pinch_in", "pinch_out"}:
             return 0.5
         return 0.1
 

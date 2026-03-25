@@ -4,6 +4,7 @@ import random
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 from loguru import logger
@@ -185,6 +186,18 @@ class SmartMonkeyApp:
                 action.params["y2"],
                 action.params.get("duration_ms", 300),
             )
+        elif action_type in {"pinch_in", "pinch_out"}:
+            success = self.driver.pinch(
+                action.params["x1_start"],
+                action.params["y1_start"],
+                action.params["x1_end"],
+                action.params["y1_end"],
+                action.params["x2_start"],
+                action.params["y2_start"],
+                action.params["x2_end"],
+                action.params["y2_end"],
+                action.params.get("duration_ms", 280),
+            )
         elif action_type == "back":
             success = self.driver.press_back()
         elif action_type == "home":
@@ -222,25 +235,30 @@ class SmartMonkeyApp:
         action: Action,
         transition: Transition,
         next_state: DeviceState,
+        extra_step_fields: dict[str, Any] | None = None,
     ) -> None:
         self.recorder.record_state(current_state)
         self.recorder.record_state(next_state)
         self.recorder.record_action(action)
         self.recorder.record_transition(transition)
-        self.recorder.record_step(
-            {
-                "step": step,
-                "current_state_id": current_state.state_id,
-                "next_state_id": next_state.state_id,
-                "action_type": action.action_type.value,
-                "action_id": action.action_id,
-                "score": action.score,
-                "score_detail": action.score_detail,
-                "changed": transition.changed,
-                "out_of_app": transition.out_of_app,
-                "stuck_score": self.runtime.stats.stuck_score,
-            }
-        )
+        step_payload: dict[str, Any] = {
+            "step": step,
+            "current_state_id": current_state.state_id,
+            "next_state_id": next_state.state_id,
+            "action_type": action.action_type.value,
+            "action_id": action.action_id,
+            "score": action.score,
+            "score_detail": action.score_detail,
+            "changed": transition.changed,
+            "crash": transition.crash,
+            "anr": transition.anr,
+            "out_of_app": transition.out_of_app,
+            "timestamp_ms": transition.timestamp_ms,
+            "stuck_score": self.runtime.stats.stuck_score,
+        }
+        if extra_step_fields:
+            step_payload.update(extra_step_fields)
+        self.recorder.record_step(step_payload)
         self.recorder.record_utg(self.runtime.utg)
 
     def should_escape(

@@ -2,7 +2,7 @@ app:
   package_name: com.ugreen.iot
   launch_activity: .ui.SplashActivity
 run:
-  max_steps: 200
+  max_steps: 2000
   post_action_wait_ms: 500
   seed: 12345
   benchmark_baseline_dir: ''

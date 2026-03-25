@@ -42,6 +42,8 @@ class HtmlReportGenerator:
         issue_counter = Counter(str(row.get("issue_type") or "unknown") for row in issue_rows)
         action_type_counter = Counter(str(row.get("action_type")) for row in runtime_steps if row.get("action_type"))
         bootstrap_counter = Counter(str(row.get("bootstrap_status") or "unknown") for row in bootstrap_rows)
+        benchmark_current = coverage_benchmark.get("current_run", {}) if isinstance(coverage_benchmark, dict) else {}
+        benchmark_current = benchmark_current if isinstance(benchmark_current, dict) else {}
 
         screenshots_dir = self.output_dir / "screenshots"
         replay_file = self.output_dir / "replay" / "actions_replay.jsonl"
@@ -647,6 +649,13 @@ class HtmlReportGenerator:
       <div class=\"card\"><div class=\"k\">恢复事件数</div><div class=\"v\">{recovery_event_count}</div></div>
       <div class=\"card\"><div class=\"k\">登录引导事件数</div><div class=\"v\">{len(bootstrap_rows)}</div></div>
       <div class=\"card\"><div class=\"k\">Checkpoint 数</div><div class=\"v\">{len(checkpoints_rows)}</div></div>
+      <div class=\"card\"><div class=\"k\">APM</div><div class=\"v\">{benchmark_current.get("actions_per_minute", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">Crash / 1k actions</div><div class=\"v\">{benchmark_current.get("crash_per_1k_actions", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">Burst 占比</div><div class=\"v\">{benchmark_current.get("burst_step_ratio", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">首次 Crash Step</div><div class=\"v\">{benchmark_current.get("time_to_first_crash_steps", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">学习探索率</div><div class=\"v\">{benchmark_current.get("learning_exploration_rate", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">学习平均奖励</div><div class=\"v\">{benchmark_current.get("learning_average_reward", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">学习步占比</div><div class=\"v\">{benchmark_current.get("learning_step_ratio", "-")}</div></div>
     </div>
     <div style=\"margin-top:12px\">
       {issue_badges or "<span class='muted'>暂无 Issue 类型分布</span>"}

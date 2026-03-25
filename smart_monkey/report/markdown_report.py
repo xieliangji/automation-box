@@ -47,6 +47,13 @@ class MarkdownReportGenerator:
             lines.append(f"- out_of_app_ratio: {current_run.get('out_of_app_ratio')}")
             lines.append(f"- issue_precision_score: {current_run.get('issue_precision_score')}")
             lines.append(f"- recovery_success_rate: {current_run.get('recovery_success_rate')}")
+            lines.append(f"- actions_per_minute: {current_run.get('actions_per_minute')}")
+            lines.append(f"- crash_per_1k_actions: {current_run.get('crash_per_1k_actions')}")
+            lines.append(f"- burst_step_ratio: {current_run.get('burst_step_ratio')}")
+            lines.append(f"- time_to_first_crash_steps: {current_run.get('time_to_first_crash_steps')}")
+            lines.append(f"- learning_step_ratio: {current_run.get('learning_step_ratio')}")
+            lines.append(f"- learning_exploration_rate: {current_run.get('learning_exploration_rate')}")
+            lines.append(f"- learning_average_reward: {current_run.get('learning_average_reward')}")
         else:
             lines.append("- 暂无")
         if isinstance(comparison, dict) and comparison:

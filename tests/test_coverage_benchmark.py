@@ -38,6 +38,10 @@ def test_coverage_benchmark_generates_current_and_comparison(tmp_path: Path) -> 
                     "action_type": "click",
                     "changed": True,
                     "out_of_app": False,
+                    "timestamp_ms": 1_000,
+                    "crash_stress_mode": True,
+                    "crash_stress_burst_active": True,
+                    "crash_signal": True,
                 },
                 {
                     "step": 1,
@@ -46,11 +50,25 @@ def test_coverage_benchmark_generates_current_and_comparison(tmp_path: Path) -> 
                     "action_type": "click",
                     "changed": True,
                     "out_of_app": False,
+                    "timestamp_ms": 31_000,
+                    "crash_stress_mode": True,
+                    "crash_stress_burst_active": False,
+                    "crash_signal": False,
                 },
                 {
                     "step": -1,
                     "recovery_strategy": "restart_to_checkpoint",
                     "recovery_validation_in_target_app": True,
+                },
+                {
+                    "step": -1,
+                    "runtime_metrics": {
+                        "learning": {
+                            "exploration_rate": 0.4,
+                            "average_reward": 0.6,
+                            "top_arms": [{"arm_key": "x", "count": 3, "avg_reward": 0.7}],
+                        }
+                    },
                 },
             ],
         )
@@ -96,6 +114,10 @@ def test_coverage_benchmark_generates_current_and_comparison(tmp_path: Path) -> 
                 "action_type": "wait",
                 "changed": False,
                 "out_of_app": True,
+                "timestamp_ms": 1_000,
+                "crash_stress_mode": False,
+                "crash_stress_burst_active": False,
+                "crash_signal": False,
             },
             {"step": -1, "recovery_strategy": "restart_app", "recovery_validation_in_target_app": False},
         ],
@@ -110,4 +132,10 @@ def test_coverage_benchmark_generates_current_and_comparison(tmp_path: Path) -> 
     assert payload["current_run"]["runtime_steps"] >= 1
     assert "composite_score" in payload["current_run"]
     assert "composite_score" in payload["comparison"]
-
+    assert payload["current_run"]["actions_per_minute"] == 4.0
+    assert payload["current_run"]["crash_per_1k_actions"] == 500.0
+    assert payload["current_run"]["burst_step_ratio"] == 0.5
+    assert payload["current_run"]["time_to_first_crash_steps"] == 0
+    assert payload["current_run"]["learning_exploration_rate"] == 0.4
+    assert payload["current_run"]["learning_average_reward"] == 0.6
+    assert payload["current_run"]["learning_top_arms"][0]["arm_key"] == "x"

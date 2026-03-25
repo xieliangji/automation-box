@@ -22,6 +22,7 @@ class TelemetryService:
         )
         self.replay_exporter = ReplayExporter(self.output_dir) if export_replay else None
         self.recent_steps: list[dict[str, Any]] = []
+        self.runtime_metrics: dict[str, Any] = {}
 
     def maybe_capture_periodic_snapshot(self, step: int, driver: Any, recorder: Any) -> str | None:
         screenshot_path = self.snapshotter.maybe_capture(step=step, driver=driver, label="periodic")
@@ -48,3 +49,6 @@ class TelemetryService:
             return
         for issue_dir in issue_dirs:
             self.replay_exporter.export_issue_replay(issue_dir, self.recent_steps)
+
+    def set_runtime_metric(self, key: str, value: Any) -> None:
+        self.runtime_metrics[key] = value

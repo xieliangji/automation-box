@@ -94,6 +94,27 @@ class AdbDriver:
         self._shell(f"input swipe {x1} {y1} {x2} {y2} {duration_ms}", check=False)
         return True
 
+    def pinch(
+        self,
+        x1_start: int,
+        y1_start: int,
+        x1_end: int,
+        y1_end: int,
+        x2_start: int,
+        y2_start: int,
+        x2_end: int,
+        y2_end: int,
+        duration_ms: int = 280,
+    ) -> bool:
+        # Android input has no first-class pinch command across all API levels.
+        # Use two concurrent swipe commands to emulate a two-finger gesture.
+        script = (
+            f"(input swipe {x1_start} {y1_start} {x1_end} {y1_end} {duration_ms} & "
+            f"input swipe {x2_start} {y2_start} {x2_end} {y2_end} {duration_ms}; wait)"
+        )
+        self._shell(script, check=False)
+        return True
+
     def press_back(self) -> bool:
         self._shell("input keyevent KEYCODE_BACK", check=False)
         return True

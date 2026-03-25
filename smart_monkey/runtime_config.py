@@ -25,6 +25,23 @@ class FeatureFlags:
 
 
 @dataclass(slots=True)
+class LearningPolicy:
+    enabled: bool = False
+    alpha: float = 0.8
+    ucb_exploration: float = 1.2
+    module_bucket_enabled: bool = True
+    reward_changed_state: float = 1.0
+    reward_novel_state: float = 0.3
+    reward_functional_page: float = 0.4
+    reward_issue_signal: float = 0.8
+    penalty_out_of_app: float = 1.0
+    penalty_unchanged: float = 0.2
+    penalty_recent_loop: float = 0.25
+    penalty_system_action: float = 0.15
+    top_arms_report_limit: int = 5
+
+
+@dataclass(slots=True)
 class RuntimeConfig:
     app: AppConfig = field(default_factory=AppConfig)
     run: RunConfig = field(default_factory=RunConfig)
@@ -33,6 +50,7 @@ class RuntimeConfig:
     safety: SafetyConfig = field(default_factory=SafetyConfig)
     snapshot: SnapshotPolicy = field(default_factory=SnapshotPolicy)
     features: FeatureFlags = field(default_factory=FeatureFlags)
+    learning: LearningPolicy = field(default_factory=LearningPolicy)
 
     @classmethod
     def from_yaml(cls, path: str | Path) -> "RuntimeConfig":
@@ -51,6 +69,7 @@ class RuntimeConfig:
             safety=SafetyConfig(**raw.get("safety", {})),
             snapshot=SnapshotPolicy(**raw.get("snapshot", {})),
             features=FeatureFlags(**feature_raw),
+            learning=LearningPolicy(**raw.get("learning", {})),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -62,4 +81,5 @@ class RuntimeConfig:
             "safety": self.safety.__dict__,
             "snapshot": self.snapshot.__dict__,
             "features": self.features.__dict__,
+            "learning": self.learning.__dict__,
         }

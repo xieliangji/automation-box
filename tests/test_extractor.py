@@ -82,6 +82,38 @@ def test_extract_always_adds_system_actions() -> None:
     assert "restart_app" in action_types
 
 
+def test_extractor_adds_pinch_actions_for_scrollable_when_enabled() -> None:
+    config = ProjectConfig()
+    config.policy.enable_pinch = True
+    extractor = RuntimeActionExtractor(config)
+    scrollable = make_element("scroll", text="列表", clickable=False, scrollable=True, y=20)
+    scrollable.visible_bounds = (100, 300, 980, 1700)
+    state = make_state([scrollable])
+
+    actions = extractor.extract(state)
+    action_types = {action.action_type.value for action in actions}
+
+    assert "swipe" in action_types
+    assert "pinch_in" in action_types
+    assert "pinch_out" in action_types
+
+
+def test_extractor_does_not_add_pinch_actions_when_disabled() -> None:
+    config = ProjectConfig()
+    config.policy.enable_pinch = False
+    extractor = RuntimeActionExtractor(config)
+    scrollable = make_element("scroll", text="列表", clickable=False, scrollable=True, y=20)
+    scrollable.visible_bounds = (100, 300, 980, 1700)
+    state = make_state([scrollable])
+
+    actions = extractor.extract(state)
+    action_types = {action.action_type.value for action in actions}
+
+    assert "swipe" in action_types
+    assert "pinch_in" not in action_types
+    assert "pinch_out" not in action_types
+
+
 def test_extractor_blocks_back_and_restart_on_login_page_when_guardrail_enabled() -> None:
     config = ProjectConfig()
     config.policy.enable_session_guardrails = True

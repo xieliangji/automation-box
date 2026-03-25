@@ -137,6 +137,18 @@ class SmartMonkeyRunner:
                 action.params["y2"],
                 action.params.get("duration_ms", 300),
             )
+        elif action.action_type.value in {"pinch_in", "pinch_out"}:
+            success = self.driver.pinch(
+                action.params["x1_start"],
+                action.params["y1_start"],
+                action.params["x1_end"],
+                action.params["y1_end"],
+                action.params["x2_start"],
+                action.params["y2_start"],
+                action.params["x2_end"],
+                action.params["y2_end"],
+                action.params.get("duration_ms", 280),
+            )
         elif action.action_type.value == "back":
             success = self.driver.press_back()
         elif action.action_type.value == "home":

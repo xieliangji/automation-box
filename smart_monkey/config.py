@@ -19,6 +19,11 @@ class RunConfig:
     post_action_wait_ms: int = 1200
     seed: int = 12345
     benchmark_baseline_dir: str = ""
+    profile: str = "functional"
+    crash_stress_wait_ms: int = 200
+    crash_stress_burst_probability: float = 0.25
+    crash_stress_burst_min_steps: int = 2
+    crash_stress_burst_max_steps: int = 5
 
 
 @dataclass(slots=True)
@@ -30,6 +35,9 @@ class PolicyConfig:
     out_of_app_threshold: int = 2
     enable_text_input: bool = True
     enable_long_click: bool = True
+    enable_pinch: bool = True
+    pinch_zoom_context_boost: float = 0.45
+    pinch_non_zoom_penalty: float = 0.6
     enable_restart_app: bool = True
     enable_session_guardrails: bool = True
     enable_login_bootstrap: bool = False
