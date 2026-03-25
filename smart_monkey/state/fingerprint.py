@@ -13,7 +13,7 @@ _TIME_RE = re.compile(r"\b\d{1,2}:\d{2}(?::\d{2})?\b")
 
 @dataclass(slots=True)
 class StateFingerprinter:
-    """Build raw and stable hashes for a device state."""
+    """为设备状态构建原始与稳定哈希。"""
 
     def build_raw_hash(self, state: DeviceState) -> str:
         payload = "\n".join(self._raw_element_signature(element) for element in state.elements)

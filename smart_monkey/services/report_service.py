@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 from smart_monkey.report.coverage_benchmark import CoverageBenchmarkGenerator
 from smart_monkey.report.html_report import HtmlReportGenerator

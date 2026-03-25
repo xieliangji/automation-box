@@ -56,7 +56,7 @@ class RuntimeConfig:
     def from_yaml(cls, path: str | Path) -> "RuntimeConfig":
         raw = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
         feature_raw = dict(raw.get("features", {}))
-        # Backward compatibility for historical config keys.
+        # 向后兼容历史配置键名。
         if "use_runtime_extractor" not in feature_raw and "use_extractor_v2" in feature_raw:
             feature_raw["use_runtime_extractor"] = feature_raw.get("use_extractor_v2")
         if "use_runtime_scorer" not in feature_raw and "use_scorer_v2" in feature_raw:

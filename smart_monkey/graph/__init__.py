@@ -1,1 +1,1 @@
-"""Graph utilities for Android Smart Monkey."""
+"""图结构工具模块。"""

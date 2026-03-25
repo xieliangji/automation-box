@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import shlex
 import subprocess
-import tempfile
 import time
 from pathlib import Path
 
@@ -87,7 +86,7 @@ class AdbDriver:
         return True
 
     def clear_text(self) -> bool:
-        # TODO: replace with a more robust strategy, e.g. repeated DEL or element-level clear.
+        # 待办：替换为更稳健的清空策略，例如连续删除或按元素级清空。
         return True
 
     def swipe(self, x1: int, y1: int, x2: int, y2: int, duration_ms: int = 300) -> bool:
@@ -106,8 +105,8 @@ class AdbDriver:
         y2_end: int,
         duration_ms: int = 280,
     ) -> bool:
-        # Android input has no first-class pinch command across all API levels.
-        # Use two concurrent swipe commands to emulate a two-finger gesture.
+        # 安卓系统在各版本中都缺少统一的原生缩放指令。
+        # 这里使用两条并发滑动来模拟双指手势。
         script = (
             f"(input swipe {x1_start} {y1_start} {x1_end} {y1_end} {duration_ms} & "
             f"input swipe {x2_start} {y2_start} {x2_end} {y2_end} {duration_ms}; wait)"

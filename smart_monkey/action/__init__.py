@@ -1,1 +1,1 @@
-"""Action extraction and scoring for Android Smart Monkey."""
+"""动作提取与评分模块。"""

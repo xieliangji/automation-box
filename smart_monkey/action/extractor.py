@@ -93,7 +93,7 @@ class ActionExtractor:
                 width = max(1, right - left)
                 height = max(1, bottom - top)
                 center_y = (top + bottom) // 2
-                # Two-finger gestures within current scrollable region.
+                # 在当前可滚动区域内生成双指手势。
                 delta_x = max(20, min(width // 4, 240))
                 delta_y = max(20, min(height // 4, 240))
                 pinch_in_params = {

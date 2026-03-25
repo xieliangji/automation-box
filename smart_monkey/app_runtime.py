@@ -26,7 +26,7 @@ from smart_monkey.services.watchdog_service import WatchdogService
 
 
 class SmartMonkeyAppRuntime(WatchdogSmartMonkeyApp):
-    """Single maintained runtime flow."""
+    """当前唯一维护的运行时主流程。"""
 
     def __init__(self, driver: DeviceDriver, config: RuntimeConfig, output_dir: str | Path = "output") -> None:
         super().__init__(driver=driver, config=config, output_dir=output_dir)

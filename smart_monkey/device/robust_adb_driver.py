@@ -17,7 +17,7 @@ class ForegroundInfo:
 
 
 class RobustAdbDriver(AdbDriver):
-    """ADB driver with more resilient foreground parsing and logcat helpers."""
+    """具备更强前台解析与系统日志辅助能力的驱动。"""
 
     def get_foreground_package(self) -> str:
         return self._read_foreground_info().package_name
@@ -50,7 +50,7 @@ class RobustAdbDriver(AdbDriver):
             return ForegroundInfo(raw_source=raw)
 
         lines = [line.strip() for line in raw.splitlines() if line.strip()]
-        # dumpsys outputs may include many historical lines; use the latest marked line.
+        # 系统输出可能包含较多历史行；优先使用最后一条带标记的记录。
         for line in reversed(lines):
             if markers and not any(marker in line for marker in markers):
                 continue
@@ -58,7 +58,7 @@ class RobustAdbDriver(AdbDriver):
             if info.package_name:
                 return info
 
-        # Fallback: try parsing any line that looks like a component token.
+        # 兜底策略：尝试解析任意看起来像组件标识的行。
         for line in reversed(lines):
             info = self._parse_foreground_info(line)
             if info.package_name:

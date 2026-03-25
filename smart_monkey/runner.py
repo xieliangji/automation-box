@@ -92,7 +92,7 @@ class SmartMonkeyRunner:
             elements=[],
             timestamp_ms=int(time.time() * 1000),
         )
-        # TODO: parse hierarchy XML to UIElement list.
+        # 待办：解析层级结构并生成元素列表。
         state.raw_hash = self.fingerprinter.build_raw_hash(state)
         state.stable_hash = self.fingerprinter.build_stable_hash(state)
         state.state_id = self.fingerprinter.build_state_id(state)

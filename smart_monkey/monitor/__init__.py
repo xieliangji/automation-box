@@ -1,1 +1,1 @@
-"""Monitoring helpers for Android Smart Monkey."""
+"""监控辅助模块。"""

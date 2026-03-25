@@ -8,7 +8,7 @@ from urllib import error, request
 
 
 class WdaClient:
-    """Lightweight REST wrapper for direct WebDriverAgent integration."""
+    """用于直连设备代理服务的轻量接口封装。"""
 
     def __init__(
         self,
@@ -110,7 +110,7 @@ class WdaClient:
             raise RuntimeError(f"Unexpected WDA screenshot payload: {response}")
         try:
             return base64.b64decode(encoded, validate=False)
-        except Exception as exc:  # pragma: no cover - guard for malformed payloads
+        except Exception as exc:  # pragma: no cover - 异常兜底：防御畸形返回数据
             raise RuntimeError("Failed to decode WDA screenshot payload.") from exc
 
     def active_app_info(self, session_id: str | None = None) -> dict[str, Any]:

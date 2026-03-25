@@ -1,1 +1,1 @@
-"""Reporting helpers for Android Smart Monkey."""
+"""报告生成辅助模块。"""

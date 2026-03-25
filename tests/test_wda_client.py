@@ -32,7 +32,7 @@ class _FakeUrlopen:
         self.responses = list(responses)
         self.requests: list[dict[str, object]] = []
 
-    def __call__(self, req, timeout):  # noqa: ANN001 - monkeypatched callable
+    def __call__(self, req, timeout):  # noqa: ANN001 - 通过补丁注入的可调用对象
         payload = req.data.decode("utf-8") if req.data else ""
         self.requests.append(
             {

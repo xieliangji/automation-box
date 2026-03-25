@@ -12,7 +12,7 @@ class LoginBootstrapAttempt:
 
 
 class LoginBootstrapService:
-    """Deterministic login bootstrap and keep-alive checks."""
+    """确定性登录引导与会话保活检查。"""
 
     _USERNAME_KEYS: tuple[str, ...] = ("phone", "email", "user", "account", "username", "账号", "手机号", "邮箱")
     _PASSWORD_KEYS: tuple[str, ...] = ("password", "pwd", "pass", "密码")

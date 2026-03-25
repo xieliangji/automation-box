@@ -1,1 +1,1 @@
-"""Android Smart Monkey package."""
+"""本项目核心包。"""

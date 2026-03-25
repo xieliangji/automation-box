@@ -129,7 +129,7 @@ class CoverageBenchmarkGenerator:
         return comparison
 
     def _composite_score(self, metrics: dict[str, Any]) -> float:
-        # score in [0, 100], higher is better
+        # 分数范围 [0, 100]，越高越好。
         unique_states = float(metrics.get("unique_states", 0))
         unique_functional_states = float(metrics.get("unique_functional_states", 0))
         functional_step_ratio = float(metrics.get("functional_step_ratio", 0.0))

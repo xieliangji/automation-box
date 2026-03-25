@@ -60,7 +60,6 @@ def test_extractor_keeps_list_sampling_bounded() -> None:
         make_element(f"item_{idx}", text=f"item {idx}", resource_id="com.demo:id/item", parent_id="list_parent", y=idx * 60)
         for idx in range(8)
     ]
-    state = make_state(items)
 
     selected = extractor._sample_list_items(items)
 

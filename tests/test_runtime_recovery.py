@@ -241,7 +241,7 @@ def test_runtime_detects_anr_signal_from_state_text(tmp_path: Path) -> None:
         states=[state_before, state_after],
     )
 
-    # Inject one node with ANR-like text through UIElement-like payload using parser-independent state
+    # 通过独立于解析器的状态，注入带无响应文本的界面节点。
     from smart_monkey.models import UIElement
 
     state_after.elements = [
@@ -301,6 +301,6 @@ def test_runtime_learning_reward_penalizes_system_actions(tmp_path: Path) -> Non
     steps = [json.loads(line) for line in (tmp_path / "steps.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
     runtime_rows = [row for row in steps if isinstance(row.get("step"), int) and row.get("step", -1) >= 0]
     assert runtime_rows
-    # wait action should receive system-action penalty, but still include changed_state reward if changed
+    # 等待动作应受到系统动作惩罚，但状态变化奖励仍应保留。
     assert runtime_rows[0]["action_type"] == "wait"
     assert runtime_rows[0]["learning_reward"] < 1.5

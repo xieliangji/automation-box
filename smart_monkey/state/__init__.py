@@ -1,1 +1,1 @@
-"""State related helpers for Android Smart Monkey."""
+"""状态处理辅助模块。"""

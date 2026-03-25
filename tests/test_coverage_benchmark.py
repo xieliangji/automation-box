@@ -103,7 +103,7 @@ def test_coverage_benchmark_generates_current_and_comparison(tmp_path: Path) -> 
             json.dumps({"issue_type": "out_of_app"}, ensure_ascii=False), encoding="utf-8"
         )
 
-    # make baseline slightly worse
+    # 让基线数据略差一些，便于验证对比指标变化。
     _write_jsonl(
         baseline / "steps.jsonl",
         [

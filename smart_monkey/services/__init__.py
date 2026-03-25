@@ -1,4 +1,4 @@
-"""Service layer for Android Smart Monkey runtime flow."""
+"""运行流程的服务层模块。"""
 
 from smart_monkey.services.learning_bandit import LearningBandit
 

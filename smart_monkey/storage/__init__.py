@@ -1,1 +1,1 @@
-"""Storage helpers for Android Smart Monkey."""
+"""存储辅助模块。"""
