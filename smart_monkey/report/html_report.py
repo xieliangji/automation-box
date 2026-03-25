@@ -193,7 +193,7 @@ class HtmlReportGenerator:
         )
 
         generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        page_title = "Android Smart Monkey 运行报告（全量数据视图）"
+        page_title = "Smart Monkey 运行报告（全量数据视图）"
         interaction_script = """
 <script>
 (function () {

@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "android-smart-monkey"
+name = "smart-monkey"
 version = "0.1.0"
-description = "A state-aware smart monkey framework scaffold for Android app testing"
+description = "A state-aware smart monkey framework scaffold for mobile app testing"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

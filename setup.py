@@ -8,9 +8,9 @@ from setuptools import find_packages, setup
 README = (Path(__file__).parent / "README.md").read_text(encoding="utf-8")
 
 setup(
-    name="android-smart-monkey",
+    name="smart-monkey",
     version="0.1.0",
-    description="A state-aware smart monkey framework scaffold for Android app testing",
+    description="A state-aware smart monkey framework scaffold for mobile app testing",
     long_description=README,
     long_description_content_type="text/markdown",
     python_requires=">=3.11",

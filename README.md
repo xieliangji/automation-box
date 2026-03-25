@@ -1,6 +1,6 @@
-# Android Smart Monkey
+# Smart Monkey
 
-一个面向 Android App 的智能 Monkey 测试项目。
+一个面向移动应用的智能 Monkey 测试项目（当前主线以 Android 驱动为主，iOS 能力持续接入中）。
 
 项目目标不是简单随机发事件，而是围绕 **状态识别、候选动作提取、动作打分、UTG 状态图、回溯恢复** 建立可持续演进的智能探索框架。
 
@@ -19,7 +19,7 @@
 环境要求：
 
 - Python `3.11+`
-- ADB 已安装并加入 PATH
+- ADB 已安装并加入 PATH（当前 Android 主线必需）
 
 1. 创建虚拟环境并安装依赖
 
@@ -65,7 +65,7 @@ copy config.example.yaml config.yaml
 - `run.benchmark_baseline_dir: ""`（可选；填写历史 run 目录可在报告中生成 A/B KPI 对比）
 - `run.profile: "functional"`（默认功能覆盖模式）
 
-Crash 专项模式（Android）可选配置：
+Crash 专项模式（当前 Android 驱动）可选配置：
 
 - `run.profile: "crash_stress"`
 - `run.crash_stress_wait_ms: 200`（动作后等待时长，默认更激进）
@@ -153,10 +153,10 @@ python -m pytest -q tests/test_parser.py::test_parser_marks_permission_and_list_
 9. `RecoveryService` 执行回溯恢复并由 `RecoveryValidator` 校验
 10. `ReportService` 生成 HTML/Markdown/metrics 报告
 
-详细设计参考：`docs/详细设计.md`  
-使用指南（非自动化同学）：`docs/使用指南（非自动化）.md`
+详细设计参考：`docs/主线详细设计.md`  
+使用指南（非自动化同学）：`docs/使用指南（当前主线）.md`
 
-iOS 直连 WDA URL 接入方案：`docs/iOS直连WDA_URL接入方案.md`
+iOS 直连 WDA URL 接入方案：`docs/iOS接入方案（直连WDA_URL）.md`
 算法优化与 crash 专项方案：`docs/算法优化与Crash专项增强方案.md`
 当前主线算法与策略详解：`docs/主线算法与策略详解.md`
 参数调优手册（按目标）：`docs/参数调优手册（按目标）.md`

@@ -25,7 +25,7 @@ class MarkdownReportGenerator:
         coverage_benchmark = coverage_benchmark if isinstance(coverage_benchmark, dict) else {}
 
         lines: list[str] = []
-        lines.append("# Android Smart Monkey 运行摘要")
+        lines.append("# Smart Monkey 运行摘要")
         lines.append("")
         lines.append(f"- 总记录行：{len(steps)}")
         lines.append(f"- 业务 Step 行：{len(runtime_steps)}")
