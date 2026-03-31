@@ -5,6 +5,7 @@ from pathlib import Path
 
 from smart_monkey.app_runtime import SmartMonkeyAppRuntime
 from smart_monkey.runtime_config import RuntimeConfig
+from smart_monkey.device.capabilities import DriverCapabilities
 from smart_monkey.models import Action, ActionType, DeviceState, ExecuteResult
 
 
@@ -90,6 +91,16 @@ class FakeDriver:
 
     def clear_logcat(self) -> None:
         return None
+
+    def capabilities(self) -> DriverCapabilities:
+        return DriverCapabilities(
+            platform="android",
+            supports_launch_target=True,
+            supports_press_back=True,
+            supports_press_home=True,
+            supports_stop_app=True,
+            supports_log_stream=True,
+        )
 
 
 class StubExtractor:

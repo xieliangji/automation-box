@@ -1,5 +1,5 @@
 app:
-  platform: android
+  platform: ios
   target_app_id: com.ugreen.iot
   launch_target: .ui.SplashActivity
   package_name: com.ugreen.iot
@@ -16,7 +16,7 @@ ios:
 
 run:
   max_steps: 300
-  post_action_wait_ms: 1200
+  post_action_wait_ms: 700
   seed: 12345
   benchmark_baseline_dir: ""
   profile: functional

@@ -1,6 +1,17 @@
 app:
+  platform: android
+  target_app_id: com.demo.app
+  launch_target: .MainActivity
   package_name: com.demo.app
   launch_activity: .MainActivity
+
+ios:
+  wda_url: "http://localhost:8100"
+  session_create_timeout_sec: 30
+  command_timeout_sec: 20
+  request_retry: 2
+  keep_session: true
+  auto_recreate_session: true
 
 run:
   max_steps: 300
@@ -12,6 +23,8 @@ run:
   crash_stress_burst_probability: 0.25
   crash_stress_burst_min_steps: 2
   crash_stress_burst_max_steps: 5
+  monkey_wait_ms: 400
+  monkey_ios_wait_ms: 260
 
 policy:
   epsilon: 0.2
@@ -32,6 +45,30 @@ policy:
   bootstrap_max_attempts: 3
   bootstrap_retry_interval_steps: 20
   prefer_functional_pages: true
+  monkey_out_of_app_streak_threshold: 2
+  monkey_loop_streak_threshold: 3
+  monkey_perturb_boost: 2.0
+  monkey_risk_cooldown_steps: 3
+  monkey_risk_penalty: 2.5
+  monkey_score_jitter: 0.35
+  monkey_diversity_state_repeat_threshold: 2
+  monkey_diversity_state_repeat_penalty: 0.6
+  monkey_diversity_novel_action_boost: 0.8
+  monkey_diversity_frontier_boost: 0.6
+  monkey_ios_permission_fastpath: true
+  monkey_ios_permission_boost: 2.2
+  monkey_ios_restart_penalty: 1.8
+  monkey_ios_back_penalty: 0.5
+  monkey_ios_swipe_boost: 0.6
+  monkey_ios_list_swipe_boost: 0.8
+  monkey_ios_pinch_boost: 0.5
+  monkey_ios_static_text_click_penalty: 1.0
+  monkey_ios_cell_click_boost: 0.7
+  monkey_ios_back_like_click_penalty: 1.1
+  monkey_ios_external_jump_penalty: 2.0
+  monkey_ios_recovery_stuck_threshold: 10
+  monkey_ios_same_state_recovery_threshold: 3
+  monkey_ios_permission_recovery_grace_steps: 3
 
 score_weights:
   novelty: 2.0
@@ -75,6 +112,9 @@ learning:
   enabled: false
   alpha: 0.8
   ucb_exploration: 1.2
+  persistence_enabled: false
+  state_path: "output/learning_state.json"
+  min_observations_to_persist: 20
   module_bucket_enabled: true
   reward_changed_state: 1.0
   reward_novel_state: 0.3
@@ -85,3 +125,20 @@ learning:
   penalty_recent_loop: 0.25
   penalty_system_action: 0.15
   top_arms_report_limit: 5
+
+sidecar:
+  monkey:
+    enabled: false
+    step_interval: 15
+    max_batches: 4
+    events_per_batch: 35
+    throttle_ms: 20
+    seed_offset: 1000
+    pct_touch: 45
+    pct_motion: 15
+    pct_nav: 35
+    pct_syskeys: 5
+    ignore_crashes: true
+    ignore_timeouts: true
+    ignore_security_exceptions: true
+    adb_timeout_sec: 30

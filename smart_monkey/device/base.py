@@ -3,9 +3,14 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Protocol
 
+from smart_monkey.device.capabilities import DriverCapabilities
+
 
 class DeviceDriver(Protocol):
     serial: str | None
+
+    def capabilities(self) -> DriverCapabilities:
+        ...
 
     def get_foreground_package(self) -> str:
         ...

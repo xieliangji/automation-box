@@ -43,39 +43,46 @@ class BacktrackHelper:
             return BacktrackDecision(strategy="restart_to_checkpoint", checkpoint=checkpoint, reason="使用最近稳定检查点恢复")
         return BacktrackDecision(strategy="restart_app", reason="没有可用检查点，执行应用重启")
 
-    def execute(self, decision: BacktrackDecision, driver: Any, package_name: str, activity_name: str | None) -> None:
+    def execute(self, decision: BacktrackDecision, driver: Any, target_app_id: str, launch_target: str | None) -> None:
         if decision.strategy == "press_back":
             driver.press_back()
             driver.wait_idle(800)
             return
         self._ensure_target_foreground(
             driver=driver,
-            package_name=package_name,
-            activity_name=activity_name,
+            target_app_id=target_app_id,
+            launch_target=launch_target,
             context=f"backtrack:{decision.strategy}",
         )
 
     @staticmethod
     def _ensure_target_foreground(
         driver: Any,
-        package_name: str,
-        activity_name: str | None,
+        target_app_id: str,
+        launch_target: str | None,
         context: str,
         max_attempts: int = 3,
     ) -> None:
+        capabilities_provider = getattr(driver, "capabilities", None)
+        supports_launch_target = True
+        supports_stop_app = True
+        if callable(capabilities_provider):
+            caps = capabilities_provider()
+            supports_launch_target = bool(getattr(caps, "supports_launch_target", True))
+            supports_stop_app = bool(getattr(caps, "supports_stop_app", True))
         for attempt in range(1, max_attempts + 1):
             current = driver.get_foreground_package()
-            if current == package_name:
+            if current == target_app_id:
                 return
-            if attempt > 1:
-                driver.stop_app(package_name)
+            if attempt > 1 and supports_stop_app:
+                driver.stop_app(target_app_id)
                 driver.wait_idle(500)
-            launch_activity = activity_name if attempt == 1 and activity_name else None
-            driver.start_app(package_name, launch_activity)
+            activity = launch_target if launch_target and supports_launch_target else None
+            driver.start_app(target_app_id, activity)
             driver.wait_idle(1500)
 
         current = driver.get_foreground_package() or "<unknown>"
         raise RuntimeError(
-            f"{context}: unable to foreground target app '{package_name}' "
+            f"{context}: unable to foreground target app '{target_app_id}' "
             f"after {max_attempts} attempts (current package: {current})."
         )

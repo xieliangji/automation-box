@@ -653,9 +653,22 @@ class HtmlReportGenerator:
       <div class=\"card\"><div class=\"k\">Crash / 1k actions</div><div class=\"v\">{benchmark_current.get("crash_per_1k_actions", "-")}</div></div>
       <div class=\"card\"><div class=\"k\">Burst 占比</div><div class=\"v\">{benchmark_current.get("burst_step_ratio", "-")}</div></div>
       <div class=\"card\"><div class=\"k\">首次 Crash Step</div><div class=\"v\">{benchmark_current.get("time_to_first_crash_steps", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">Monkey 步占比</div><div class=\"v\">{benchmark_current.get("monkey_step_ratio", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">Monkey 逃逸增强占比</div><div class=\"v\">{benchmark_current.get("monkey_escape_boosted_ratio", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">Monkey 风险冷却占比</div><div class=\"v\">{benchmark_current.get("monkey_risk_cooldown_ratio", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">Monkey 多样性增强占比</div><div class=\"v\">{benchmark_current.get("monkey_diversity_boosted_ratio", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">iOS Monkey 调参命中占比</div><div class=\"v\">{benchmark_current.get("monkey_ios_tuning_applied_ratio", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">iOS 权限快路径占比</div><div class=\"v\">{benchmark_current.get("monkey_ios_permission_fastpath_ratio", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">权限态步占比</div><div class=\"v\">{benchmark_current.get("permission_like_step_ratio", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">iOS 恢复缓冲占比</div><div class=\"v\">{benchmark_current.get("monkey_ios_recovery_grace_step_ratio", "-")}</div></div>
       <div class=\"card\"><div class=\"k\">学习探索率</div><div class=\"v\">{benchmark_current.get("learning_exploration_rate", "-")}</div></div>
       <div class=\"card\"><div class=\"k\">学习平均奖励</div><div class=\"v\">{benchmark_current.get("learning_average_reward", "-")}</div></div>
       <div class=\"card\"><div class=\"k\">学习步占比</div><div class=\"v\">{benchmark_current.get("learning_step_ratio", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">Sidecar 批次数</div><div class=\"v\">{benchmark_current.get("sidecar_batch_count", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">Sidecar 成功率</div><div class=\"v\">{benchmark_current.get("sidecar_success_rate", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">Sidecar 恢复次数</div><div class=\"v\">{benchmark_current.get("sidecar_recovery_count", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">Sidecar 注入事件数</div><div class=\"v\">{benchmark_current.get("sidecar_events_injected_total", "-")}</div></div>
+      <div class=\"card\"><div class=\"k\">KPI Gate 通过</div><div class=\"v\">{coverage_benchmark.get("gates", {}).get("passed", "-") if isinstance(coverage_benchmark, dict) else "-"}</div></div>
     </div>
     <div style=\"margin-top:12px\">
       {issue_badges or "<span class='muted'>暂无 Issue 类型分布</span>"}
@@ -807,6 +820,12 @@ class HtmlReportGenerator:
             ("recovery_reason", "Recovery Reason", "text"),
             ("bootstrap_status", "Bootstrap Status", "text"),
             ("bootstrap_reason", "Bootstrap Reason", "text"),
+            ("sidecar_monkey_batch", "Sidecar Batch", "bool"),
+            ("sidecar_batch_no", "Sidecar Batch No", "text"),
+            ("sidecar_trigger_step", "Sidecar Trigger Step", "text"),
+            ("sidecar_success", "Sidecar Success", "bool"),
+            ("sidecar_events_injected", "Sidecar Events", "text"),
+            ("sidecar_recovered_to_target", "Sidecar Recovered", "bool"),
             ("score_detail", "Score Detail", "json"),
         ],
     )}

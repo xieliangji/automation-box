@@ -119,6 +119,7 @@
 
 - `functional`（默认）：当前稳健模式
 - `crash_stress`：高频高压模式
+- `monkey_compatible`：兼容增强模式（防脱、防卡、风险冷却、轻量随机抖动）
 
 ## 5.2 crash_stress 的核心策略
 
@@ -152,6 +153,25 @@
 - crash 命中率（每千步）
 - crash 首次发现步数（越早越好）
 - 可复现率（issue replay 可复现比例）
+
+---
+
+## 5.4 monkey_compatible 的核心策略（已实现，Android 先行）
+
+1. **防脱增强**
+- 连续 out_of_app 时，提高 `back/swipe/restart_app/wait` 的分值，优先拉回目标 App
+
+2. **防卡增强**
+- 连续同状态时，给逃逸动作加分，降低“卡死页面反复点”
+
+3. **风险冷却**
+- 高风险动作执行后，在冷却窗口内对高风险动作附加惩罚，防止危险动作连发
+
+4. **轻量随机抖动**
+- 对候选动作分值加入小幅 jitter，提高 Monkey 风格探索多样性
+
+5. **可观测**
+- 在 `steps.jsonl` 落盘 `monkey_*` 字段，并在 benchmark 中提供 Monkey 专项 KPI
 
 ---
 
@@ -191,4 +211,3 @@
   - crash 命中率或问题发现速度有统计改善
   - out_of_app 不出现失控飙升
 - 报告可清晰区分模式与指标
-

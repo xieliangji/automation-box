@@ -1,7 +1,7 @@
 # iOS（直连 WDA URL）接入方案
 
 > 目标：在不引入 Appium 的前提下，基于用户提供的 WDA URL，把当前 monkey 框架扩展到 iOS。  
-> 当前阶段：设计方案落盘（不写代码）。
+> 当前阶段：已完成主线接入与最小闭环验证（持续迭代中）。
 
 ---
 
@@ -35,7 +35,7 @@
 
 ## 2.2 非目标
 
-- 本文不包含代码实现
+- 本文不展开代码逐行解读（仅说明主线设计与落地结果）
 - 本文不负责 WDA 安装、签名、部署细节
 - 本文不引入 Appium 兼容层
 
@@ -58,28 +58,31 @@
 
 ---
 
-## 4. 配置模型（建议）
+## 4. 配置模型（当前主线）
 
-在现有配置基础上增加平台字段，建议如下（草案）：
+在现有配置基础上，当前主线已支持如下配置：
 
 ```yaml
-platform: ios
+app:
+  platform: ios
+  target_app_id: "com.example.app"
+  launch_target: ""
 
 ios:
   wda_url: "http://127.0.0.1:8100"
-  bundle_id: "com.example.app"
-  udid: ""                         # 可选，仅用于日志和标识
   session_create_timeout_sec: 30
   command_timeout_sec: 20
   request_retry: 2
   keep_session: true
   auto_recreate_session: true
+  udid: ""
 ```
 
 说明：
 
-- Android 继续使用现有 `app.package_name/launch_activity`
-- iOS 使用 `ios.bundle_id`，不依赖 Android 的 `activity` 概念
+- Android 继续兼容 `app.package_name/launch_activity`，并优先推荐使用平台中性字段 `app.target_app_id/launch_target`
+- iOS 入口使用 `app.platform=ios` + `app.target_app_id` + `ios.wda_url`
+- 为兼容历史配置，仍接受 `platform: ios`（根级）和 `ios.bundle_id`，运行时会自动映射
 
 ---
 

@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 
 from smart_monkey.device.adb_driver import AdbDriver
+from smart_monkey.device.capabilities import DriverCapabilities
 
 
 _COMPONENT_RE = re.compile(r"(?P<pkg>[A-Za-z0-9_.$]+)\/(?P<act>[A-Za-z0-9_.$]+)")
@@ -21,6 +22,16 @@ class RobustAdbDriver(AdbDriver):
 
     def get_foreground_package(self) -> str:
         return self._read_foreground_info().package_name
+
+    def capabilities(self) -> DriverCapabilities:
+        return DriverCapabilities(
+            platform="android",
+            supports_launch_target=True,
+            supports_press_back=True,
+            supports_press_home=True,
+            supports_stop_app=True,
+            supports_log_stream=True,
+        )
 
     def get_current_activity(self) -> str | None:
         return self._read_foreground_info().activity_name

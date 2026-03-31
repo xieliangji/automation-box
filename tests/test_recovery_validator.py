@@ -19,7 +19,7 @@ def make_state(state_id: str, package_name: str = "com.demo.app") -> DeviceState
 
 
 def test_validator_records_exact_anchor_hit(tmp_path: Path) -> None:
-    validator = RecoveryValidator(tmp_path, target_package="com.demo.app")
+    validator = RecoveryValidator(tmp_path, target_app_id="com.demo.app")
     state = make_state("state-anchor")
 
     result = validator.validate(
@@ -35,7 +35,7 @@ def test_validator_records_exact_anchor_hit(tmp_path: Path) -> None:
 
 
 def test_validator_summary_counts_rows(tmp_path: Path) -> None:
-    validator = RecoveryValidator(tmp_path, target_package="com.demo.app")
+    validator = RecoveryValidator(tmp_path, target_app_id="com.demo.app")
     validator.validate(
         actual_state=make_state("state-1"),
         expected_anchor_state="state-1",

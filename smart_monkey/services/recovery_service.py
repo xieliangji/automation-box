@@ -22,18 +22,18 @@ class RecoveryService:
     def __init__(
         self,
         output_dir: str | Path,
-        package_name: str,
-        launch_activity: str | None,
+        target_app_id: str,
+        launch_target: str | None,
         checkpoint_manager: CheckpointManager,
         backtrack_helper: BacktrackHelper,
     ) -> None:
         self.output_dir = Path(output_dir)
-        self.package_name = package_name
-        self.launch_activity = launch_activity
+        self.target_app_id = target_app_id
+        self.launch_target = launch_target
         self.checkpoint_manager = checkpoint_manager
         self.backtrack_helper = backtrack_helper
         self.navigation_recovery = NavigationRecovery(self.output_dir)
-        self.recovery_validator = RecoveryValidator(self.output_dir, target_package=package_name)
+        self.recovery_validator = RecoveryValidator(self.output_dir, target_app_id=target_app_id)
 
     def recover(
         self,
@@ -57,8 +57,8 @@ class RecoveryService:
         self.navigation_recovery.execute_plan(
             plan=plan,
             driver=driver,
-            package_name=self.package_name,
-            activity_name=checkpoint_activity or self.launch_activity,
+            target_app_id=self.target_app_id,
+            launch_target=checkpoint_activity or self.launch_target,
         )
 
         validation: RecoveryValidationResult | None = None

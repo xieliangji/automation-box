@@ -40,3 +40,14 @@ def test_watchdog_anr_requires_target_package_context(tmp_path: Path) -> None:
 """
 
     assert watchdog._looks_like_anr(excerpt) is False
+
+
+def test_watchdog_ios_crash_detection_uses_ios_markers(tmp_path: Path) -> None:
+    recorder = IssueRecorder(tmp_path)
+    watchdog = Watchdog(app_package="com.demo.ios", issue_recorder=recorder, platform="ios")
+    excerpt = """
+    03-24 12:06:14.111 SpringBoard[123] termination reason: Namespace SIGNAL, Code 0xb
+    03-24 12:06:14.111 com.demo.ios[456] uncaught exception: boom
+    """
+
+    assert watchdog._looks_like_crash(excerpt) is True

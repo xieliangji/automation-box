@@ -5,15 +5,10 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 
 from smart_monkey.models import UIElement
+from smart_monkey.platform_profiles import build_ui_parsing_rules
 
 
 _BOUNDS_RE = re.compile(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]")
-_EDITABLE_CLASSES = {
-    "android.widget.edittext",
-    "androidx.appcompat.widget.appcompatedittext",
-}
-
-
 @dataclass(slots=True)
 class ParsedHierarchy:
     elements: list[UIElement]
@@ -23,6 +18,10 @@ class ParsedHierarchy:
 
 
 class HierarchyParser:
+    def __init__(self, platform: str = "android") -> None:
+        self.platform = platform
+        self.rules = build_ui_parsing_rules(platform)
+
     def parse(self, xml_content: str) -> ParsedHierarchy:
         root = ET.fromstring(xml_content)
         elements: list[UIElement] = []
@@ -70,7 +69,7 @@ class HierarchyParser:
         system_flags: set[str],
         app_flags: set[str],
     ) -> str | None:
-        if node.tag != "node":
+        if not self._is_element_node(node):
             for index, child in enumerate(list(node)):
                 self._walk(
                     node=child,
@@ -86,20 +85,29 @@ class HierarchyParser:
 
         node_index = len(elements)
         element_id = f"e{node_index:04d}"
-        class_name = node.attrib.get("class", "")
-        package_name = node.attrib.get("package") or None
-        text = node.attrib.get("text") or None
-        content_desc = node.attrib.get("content-desc") or None
-        bounds = self._parse_bounds(node.attrib.get("bounds", ""))
-        clickable = self._as_bool(node.attrib.get("clickable"))
-        long_clickable = self._as_bool(node.attrib.get("long-clickable"))
-        scrollable = self._as_bool(node.attrib.get("scrollable"))
+        class_name = (node.attrib.get("class") or node.attrib.get("type") or node.tag or "").strip()
+        package_name = node.attrib.get("package") or node.attrib.get("bundleId") or None
+        text = self._first_non_empty(
+            node.attrib.get("text"),
+            node.attrib.get("label"),
+            node.attrib.get("value"),
+            node.attrib.get("name"),
+        )
+        content_desc = self._first_non_empty(
+            node.attrib.get("content-desc"),
+            node.attrib.get("name"),
+            node.attrib.get("label"),
+        )
+        bounds = self._parse_visible_bounds(node)
+        clickable = self._resolve_clickable(node.attrib, class_name)
+        long_clickable = self._resolve_long_clickable(node.attrib, class_name)
+        scrollable = self._resolve_scrollable(node.attrib, class_name)
         checkable = self._as_bool(node.attrib.get("checkable"))
         checked = self._as_bool(node.attrib.get("checked"))
         enabled = self._as_bool(node.attrib.get("enabled"), default=True)
         focusable = self._as_bool(node.attrib.get("focusable"))
         focused = self._as_bool(node.attrib.get("focused"))
-        editable = self._is_editable(node.attrib)
+        editable = self._is_editable(node.attrib, class_name)
 
         element = UIElement(
             element_id=element_id,
@@ -124,13 +132,14 @@ class HierarchyParser:
         )
         elements.append(element)
 
-        if package_name == "com.android.permissioncontroller":
+        package_lower = (package_name or "").lower()
+        if package_lower in self.rules.permission_controller_packages:
             system_flags.add("permission_controller")
-        if package_name == "com.android.settings":
+        if package_lower in self.rules.settings_packages:
             system_flags.add("settings")
-        if text and any(token in text for token in ("允许", "拒绝", "仅在使用期间", "while using the app")):
+        if text and any(token in text.lower() for token in self.rules.permission_like_tokens):
             popup_flags.add("permission_like")
-        if text and any(token in text.lower() for token in ("loading", "加载中")):
+        if text and any(token in text.lower() for token in self.rules.loading_tokens):
             app_flags.add("loading")
 
         for index, child in enumerate(list(node)):
@@ -157,15 +166,27 @@ class HierarchyParser:
         return tuple(int(item) for item in match.groups())  # type: ignore[return-value]
 
     @staticmethod
+    def _parse_ios_bounds(attrs: dict[str, str]) -> tuple[int, int, int, int]:
+        try:
+            left = int(float(attrs.get("x", "0")))
+            top = int(float(attrs.get("y", "0")))
+            width = int(float(attrs.get("width", "0")))
+            height = int(float(attrs.get("height", "0")))
+        except ValueError:
+            return (0, 0, 0, 0)
+        right = max(left, left + width)
+        bottom = max(top, top + height)
+        return (left, top, right, bottom)
+
+    @staticmethod
     def _as_bool(value: str | None, default: bool = False) -> bool:
         if value is None:
             return default
         return value.lower() == "true"
 
-    @staticmethod
-    def _is_editable(attrs: dict[str, str]) -> bool:
-        class_name = attrs.get("class", "").lower()
-        if class_name in _EDITABLE_CLASSES:
+    def _is_editable(self, attrs: dict[str, str], class_name: str) -> bool:
+        class_name = class_name.lower()
+        if class_name in self.rules.editable_classes:
             return True
         resource_id = (attrs.get("resource-id") or "").lower()
         text = (attrs.get("text") or "").lower()
@@ -205,3 +226,61 @@ class HierarchyParser:
         editable_count = sum(1 for element in elements if element.editable)
         clickable_tokens = set().union(*(element.semantic_tokens() for element in elements if element.clickable)) if elements else set()
         return editable_count >= 2 and bool(clickable_tokens & {"submit", "提交", "save", "保存", "完成", "done"})
+
+    def _is_element_node(self, node: ET.Element) -> bool:
+        if self.platform == "ios":
+            return node.tag.lower().startswith("xcuielementtype")
+        return node.tag == "node"
+
+    def _parse_visible_bounds(self, node: ET.Element) -> tuple[int, int, int, int]:
+        if self.platform == "ios":
+            return self._parse_ios_bounds(node.attrib)
+        return self._parse_bounds(node.attrib.get("bounds", ""))
+
+    def _resolve_clickable(self, attrs: dict[str, str], class_name: str) -> bool:
+        if self.platform != "ios":
+            return self._as_bool(attrs.get("clickable"))
+        if not self._as_bool(attrs.get("enabled"), default=True):
+            return False
+        if not self._as_bool(attrs.get("visible"), default=True):
+            return False
+        kind = class_name.lower()
+        interactive_tokens = (
+            "button",
+            "cell",
+            "link",
+            "icon",
+            "tabbarbutton",
+            "menuitem",
+            "switch",
+        )
+        if any(token in kind for token in interactive_tokens):
+            return True
+        if self._as_bool(attrs.get("accessible")) and self._first_non_empty(
+            attrs.get("name"),
+            attrs.get("label"),
+            attrs.get("value"),
+        ):
+            return True
+        return False
+
+    def _resolve_long_clickable(self, attrs: dict[str, str], class_name: str) -> bool:
+        if self.platform != "ios":
+            return self._as_bool(attrs.get("long-clickable"))
+        return False
+
+    def _resolve_scrollable(self, attrs: dict[str, str], class_name: str) -> bool:
+        if self.platform != "ios":
+            return self._as_bool(attrs.get("scrollable"))
+        kind = class_name.lower()
+        return any(token in kind for token in ("scrollview", "table", "collectionview", "webview"))
+
+    @staticmethod
+    def _first_non_empty(*values: str | None) -> str | None:
+        for value in values:
+            if value is None:
+                continue
+            cleaned = str(value).strip()
+            if cleaned:
+                return cleaned
+        return None

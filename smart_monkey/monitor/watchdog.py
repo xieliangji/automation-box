@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from smart_monkey.models import Action, DeviceState, Transition
+from smart_monkey.platform_profiles import build_watchdog_rules
 from smart_monkey.storage.issue_recorder import IssueRecorder
 
 
@@ -17,9 +18,10 @@ class WatchdogEvent:
 
 
 class Watchdog:
-    def __init__(self, app_package: str, issue_recorder: IssueRecorder) -> None:
+    def __init__(self, app_package: str, issue_recorder: IssueRecorder, platform: str = "android") -> None:
         self.app_package = app_package
         self.issue_recorder = issue_recorder
+        self.rules = build_watchdog_rules(platform)
         self._recent_signatures: list[str] = []
 
     def reset_logcat(self, driver: Any) -> None:
@@ -135,23 +137,22 @@ class Watchdog:
         if not log_excerpt:
             return False
         lower_log = log_excerpt.lower()
-        has_fatal = "fatal exception" in lower_log or "has crashed" in lower_log
+        has_fatal = any(marker in lower_log for marker in self.rules.crash_fatal_markers)
         if not has_fatal:
             return False
         has_package = f"process: {self.app_package.lower()}" in lower_log or self.app_package.lower() in lower_log
-        has_runtime = "androidruntime" in lower_log
-        return has_package and has_runtime
+        if not has_package:
+            return False
+        if not self.rules.crash_runtime_markers:
+            return True
+        return any(marker in lower_log for marker in self.rules.crash_runtime_markers)
 
     def _looks_like_anr(self, log_excerpt: str) -> bool:
-        signals = [
-            f"ANR in {self.app_package}",
-            "Application Not Responding",
-            "Input dispatching timed out",
-            "isn't responding",
-        ]
         lower_log = log_excerpt.lower()
-        if not any(signal.lower() in lower_log for signal in signals):
+        dynamic_marker = f"anr in {self.app_package.lower()}"
+        markers = [*self.rules.anr_markers, dynamic_marker]
+        if not any(marker in lower_log for marker in markers):
             return False
-        if f"anr in {self.app_package.lower()}" in lower_log:
+        if dynamic_marker in lower_log:
             return True
         return self.app_package.lower() in lower_log

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import math
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass(slots=True)
@@ -75,3 +77,60 @@ class LearningBandit:
                 {"arm_key": arm, "count": count, "avg_reward": avg_reward} for arm, count, avg_reward in ranked[: max(1, limit)]
             ],
         }
+
+    def dump_state(self) -> dict:
+        return {
+            "exploration": self.exploration,
+            "total_observations": self.total_observations,
+            "explore_count": self._explore_count,
+            "reward_sum": self._reward_sum,
+            "arms": {
+                arm_key: {"count": arm.count, "reward_sum": arm.reward_sum}
+                for arm_key, arm in self._arms.items()
+                if arm.count > 0
+            },
+        }
+
+    def load_state(self, payload: dict) -> bool:
+        if not isinstance(payload, dict):
+            return False
+        arms_payload = payload.get("arms")
+        if not isinstance(arms_payload, dict):
+            return False
+        self._arms = {}
+        for arm_key, arm_payload in arms_payload.items():
+            if not isinstance(arm_key, str) or not isinstance(arm_payload, dict):
+                continue
+            count = int(arm_payload.get("count", 0) or 0)
+            reward_sum = float(arm_payload.get("reward_sum", 0.0) or 0.0)
+            if count <= 0:
+                continue
+            self._arms[arm_key] = ArmStats(count=count, reward_sum=reward_sum)
+        self.total_observations = int(payload.get("total_observations", sum(arm.count for arm in self._arms.values())) or 0)
+        if self.total_observations < 0:
+            self.total_observations = 0
+        self._explore_count = int(payload.get("explore_count", 0) or 0)
+        if self._explore_count < 0:
+            self._explore_count = 0
+        self._reward_sum = float(payload.get("reward_sum", sum(arm.reward_sum for arm in self._arms.values())) or 0.0)
+        self._last_selected_arm = None
+        return True
+
+    def save_to_path(self, path: str | Path) -> bool:
+        target = Path(path)
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(json.dumps(self.dump_state(), ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+        except Exception:
+            return False
+        return True
+
+    def load_from_path(self, path: str | Path) -> bool:
+        target = Path(path)
+        if not target.exists():
+            return False
+        try:
+            payload = json.loads(target.read_text(encoding="utf-8"))
+        except Exception:
+            return False
+        return self.load_state(payload)

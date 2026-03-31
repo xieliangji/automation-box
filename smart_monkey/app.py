@@ -13,6 +13,7 @@ from smart_monkey.action.extractor import ActionExtractor
 from smart_monkey.action.scorer import ActionScorer
 from smart_monkey.config import ProjectConfig
 from smart_monkey.device.base import DeviceDriver
+from smart_monkey.device.capabilities import resolve_driver_capabilities
 from smart_monkey.graph.utg import UTG
 from smart_monkey.logging_utils import setup_logger
 from smart_monkey.models import Action, ActionHistory, DeviceState, ExecuteResult, RunStats, Transition
@@ -38,18 +39,28 @@ class SmartMonkeyApp:
 
         self.runtime = Runtime(config=config)
         self.fingerprinter = StateFingerprinter()
-        self.parser = HierarchyParser()
+        self.parser = HierarchyParser(platform=self.config.app.platform)
         self.extractor = ActionExtractor(config)
         self.scorer = ActionScorer(config)
         self.recorder = RunRecorder(self.output_dir)
+        self.driver_capabilities = resolve_driver_capabilities(driver)
 
         random.seed(config.run.seed)
         logger.info(
-            "app initialized output_dir={} target_package={} launch_activity={} seed={}",
+            "app initialized output_dir={} target_app_id={} launch_target={} seed={}",
             self.output_dir,
-            self.config.app.package_name,
-            self.config.app.launch_activity,
+            self.config.app.target_app_id,
+            self.config.app.launch_target,
             self.config.run.seed,
+        )
+        logger.info(
+            "driver capabilities platform={} launch_target={} press_back={} press_home={} stop_app={} log_stream={}",
+            self.driver_capabilities.platform,
+            self.driver_capabilities.supports_launch_target,
+            self.driver_capabilities.supports_press_back,
+            self.driver_capabilities.supports_press_home,
+            self.driver_capabilities.supports_stop_app,
+            self.driver_capabilities.supports_log_stream,
         )
 
     def run(self) -> None:
@@ -95,7 +106,7 @@ class SmartMonkeyApp:
                 changed=current_state.state_id != next_state.state_id,
                 crash=False,
                 anr=False,
-                out_of_app=next_state.package_name != self.config.app.package_name,
+                out_of_app=next_state.package_name != self.config.app.target_app_id,
                 duration_ms=int((time.time() - action_started_at) * 1000),
                 timestamp_ms=int(time.time() * 1000),
             )
@@ -199,12 +210,11 @@ class SmartMonkeyApp:
                 action.params.get("duration_ms", 280),
             )
         elif action_type == "back":
-            success = self.driver.press_back()
+            success = self._try_press_back()
         elif action_type == "home":
-            success = self.driver.press_home()
+            success = self._try_press_home()
         elif action_type == "restart_app":
-            self.driver.stop_app(self.config.app.package_name)
-            self.driver.wait_idle(500)
+            self._stop_target_app()
             self._ensure_target_foreground(context="restart action")
             success = True
         else:
@@ -277,55 +287,73 @@ class SmartMonkeyApp:
         return False
 
     def escape(self) -> None:
-        self.driver.press_back()
+        self._try_press_back()
         self.driver.wait_idle(800)
-        if self.driver.get_foreground_package() != self.config.app.package_name:
+        if self.driver.get_foreground_package() != self.config.app.target_app_id:
             self._ensure_target_foreground(context="escape recovery")
         self.runtime.stats.stuck_score = max(0, self.runtime.stats.stuck_score - 5)
 
     def recover_from_out_of_app(self) -> None:
-        self.driver.press_back()
+        self._try_press_back()
         self.driver.wait_idle(800)
-        if self.driver.get_foreground_package() != self.config.app.package_name:
+        if self.driver.get_foreground_package() != self.config.app.target_app_id:
             self._ensure_target_foreground(context="out-of-app recovery")
 
     def _ensure_app_started(self) -> None:
         self._ensure_target_foreground(context="initial launch")
 
     def _ensure_target_foreground(self, context: str, max_attempts: int = 3) -> None:
-        target_package = self.config.app.package_name
-        launch_activity = self.config.app.launch_activity
+        target_app_id = self.config.app.target_app_id
+        launch_target = self.config.app.launch_target
         for attempt in range(1, max_attempts + 1):
-            if self.driver.get_foreground_package() == target_package:
-                logger.info("foreground ensured context={} attempt={} package={}", context, attempt, target_package)
+            if self.driver.get_foreground_package() == target_app_id:
+                logger.info("foreground ensured context={} attempt={} target={}", context, attempt, target_app_id)
                 return
             if attempt > 1:
-                self.driver.stop_app(target_package)
-                self.driver.wait_idle(500)
-            activity = launch_activity if attempt == 1 and launch_activity else None
+                self._stop_target_app()
+            activity = launch_target if launch_target and self.driver_capabilities.supports_launch_target else None
             logger.warning(
-                "foreground mismatch context={} attempt={} target={} launch_activity={}",
+                "foreground mismatch context={} attempt={} target={} launch_target={}",
                 context,
                 attempt,
-                target_package,
+                target_app_id,
                 activity,
             )
-            self.driver.start_app(target_package, activity)
+            self.driver.start_app(target_app_id, activity)
             self.driver.wait_idle(1500)
 
         current_package = self.driver.get_foreground_package() or "<unknown>"
         logger.error(
             "foreground failed context={} target={} current={} attempts={}",
             context,
-            target_package,
+            target_app_id,
             current_package,
             max_attempts,
         )
         raise RuntimeError(
-            f"{context}: failed to foreground target app '{target_package}' "
+            f"{context}: failed to foreground target app '{target_app_id}' "
             f"after {max_attempts} attempts (current package: {current_package}). "
-            "Please verify app.package_name and app.launch_activity."
+            "Please verify app.target_app_id and app.launch_target."
         )
+
+    def _try_press_back(self) -> bool:
+        if self.driver_capabilities.supports_press_back:
+            return bool(self.driver.press_back())
+        logger.warning("driver does not support back action, skip")
+        return False
+
+    def _try_press_home(self) -> bool:
+        if self.driver_capabilities.supports_press_home:
+            return bool(self.driver.press_home())
+        logger.warning("driver does not support home action, fallback to restart foreground")
+        self._ensure_target_foreground(context="home action fallback")
+        return True
+
+    def _stop_target_app(self) -> None:
+        if not self.driver_capabilities.supports_stop_app:
+            return
+        self.driver.stop_app(self.config.app.target_app_id)
+        self.driver.wait_idle(500)
 
     def _mark_visited(self, state_id: str) -> None:
         self.runtime.stats.visited_states[state_id] = self.runtime.stats.visited_states.get(state_id, 0) + 1

@@ -62,7 +62,7 @@ class SmartMonkeyRunner:
                 action_id=action.action_id,
                 success=result.success,
                 changed=state.state_id != next_state.state_id,
-                out_of_app=next_state.package_name != self.config.app.package_name,
+                out_of_app=next_state.package_name != self.config.app.target_app_id,
                 duration_ms=duration_ms,
                 timestamp_ms=int(time.time() * 1000),
             )
@@ -154,8 +154,8 @@ class SmartMonkeyRunner:
         elif action.action_type.value == "home":
             success = self.driver.press_home()
         elif action.action_type.value == "restart_app":
-            self.driver.stop_app(self.config.app.package_name)
-            success = self.driver.start_app(self.config.app.package_name, self.config.app.launch_activity)
+            self.driver.stop_app(self.config.app.target_app_id)
+            success = self.driver.start_app(self.config.app.target_app_id, self.config.app.launch_target)
         else:
             time.sleep(action.params.get("duration_ms", 1000) / 1000)
             success = True
@@ -198,13 +198,13 @@ class SmartMonkeyRunner:
     def recover_from_out_of_app(self) -> None:
         self.driver.press_back()
         self.driver.wait_idle(800)
-        if self.driver.get_foreground_package() != self.config.app.package_name:
-            self.driver.start_app(self.config.app.package_name, self.config.app.launch_activity)
+        if self.driver.get_foreground_package() != self.config.app.target_app_id:
+            self.driver.start_app(self.config.app.target_app_id, self.config.app.launch_target)
             self.driver.wait_idle(1500)
 
     def _ensure_app_started(self) -> None:
-        if self.driver.get_foreground_package() != self.config.app.package_name:
-            self.driver.start_app(self.config.app.package_name, self.config.app.launch_activity)
+        if self.driver.get_foreground_package() != self.config.app.target_app_id:
+            self.driver.start_app(self.config.app.target_app_id, self.config.app.launch_target)
             self.driver.wait_idle(1500)
 
     def _mark_visited(self, state_id: str) -> None:

@@ -13,7 +13,11 @@ class WatchdogSmartMonkeyApp(SmartMonkeyApp):
     def __init__(self, driver: DeviceDriver, config: ProjectConfig, output_dir: str | Path = "output") -> None:
         super().__init__(driver=driver, config=config, output_dir=output_dir)
         self.issue_recorder = IssueRecorder(self.output_dir)
-        self.watchdog = Watchdog(app_package=config.app.package_name, issue_recorder=self.issue_recorder)
+        self.watchdog = Watchdog(
+            app_package=config.app.target_app_id,
+            issue_recorder=self.issue_recorder,
+            platform=config.app.platform,
+        )
 
     def run(self) -> None:
         self.watchdog.reset_logcat(self.driver)
@@ -82,7 +86,7 @@ class WatchdogSmartMonkeyApp(SmartMonkeyApp):
             changed=current_state.state_id != next_state.state_id,
             crash=False,
             anr=False,
-            out_of_app=next_state.package_name != self.config.app.package_name,
+            out_of_app=next_state.package_name != self.config.app.target_app_id,
             duration_ms=0,
             timestamp_ms=next_state.timestamp_ms,
         )

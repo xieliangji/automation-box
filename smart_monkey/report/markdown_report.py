@@ -51,9 +51,26 @@ class MarkdownReportGenerator:
             lines.append(f"- crash_per_1k_actions: {current_run.get('crash_per_1k_actions')}")
             lines.append(f"- burst_step_ratio: {current_run.get('burst_step_ratio')}")
             lines.append(f"- time_to_first_crash_steps: {current_run.get('time_to_first_crash_steps')}")
+            lines.append(f"- monkey_step_ratio: {current_run.get('monkey_step_ratio')}")
+            lines.append(f"- monkey_escape_boosted_ratio: {current_run.get('monkey_escape_boosted_ratio')}")
+            lines.append(f"- monkey_risk_cooldown_ratio: {current_run.get('monkey_risk_cooldown_ratio')}")
+            lines.append(f"- monkey_diversity_boosted_ratio: {current_run.get('monkey_diversity_boosted_ratio')}")
+            lines.append(f"- monkey_ios_tuning_applied_ratio: {current_run.get('monkey_ios_tuning_applied_ratio')}")
+            lines.append(f"- monkey_ios_permission_fastpath_ratio: {current_run.get('monkey_ios_permission_fastpath_ratio')}")
+            lines.append(f"- permission_like_step_ratio: {current_run.get('permission_like_step_ratio')}")
+            lines.append(f"- monkey_ios_recovery_grace_step_ratio: {current_run.get('monkey_ios_recovery_grace_step_ratio')}")
+            lines.append(f"- monkey_max_out_of_app_streak: {current_run.get('monkey_max_out_of_app_streak')}")
+            lines.append(f"- monkey_max_same_state_streak: {current_run.get('monkey_max_same_state_streak')}")
             lines.append(f"- learning_step_ratio: {current_run.get('learning_step_ratio')}")
             lines.append(f"- learning_exploration_rate: {current_run.get('learning_exploration_rate')}")
             lines.append(f"- learning_average_reward: {current_run.get('learning_average_reward')}")
+            lines.append(f"- sidecar_batch_count: {current_run.get('sidecar_batch_count')}")
+            lines.append(f"- sidecar_success_count: {current_run.get('sidecar_success_count')}")
+            lines.append(f"- sidecar_success_rate: {current_run.get('sidecar_success_rate')}")
+            lines.append(f"- sidecar_recovery_count: {current_run.get('sidecar_recovery_count')}")
+            lines.append(f"- sidecar_events_injected_total: {current_run.get('sidecar_events_injected_total')}")
+            lines.append(f"- sidecar_batch_step_ratio: {current_run.get('sidecar_batch_step_ratio')}")
+            lines.append(f"- sidecar_last_exit_code: {current_run.get('sidecar_last_exit_code')}")
         else:
             lines.append("- 暂无")
         if isinstance(comparison, dict) and comparison:
@@ -64,6 +81,23 @@ class MarkdownReportGenerator:
                 lines.append(
                     f"  - {key}: current={payload.get('current')} baseline={payload.get('baseline')} delta={payload.get('delta')}"
                 )
+        gates = coverage_benchmark.get("gates", {}) if isinstance(coverage_benchmark, dict) else {}
+        if isinstance(gates, dict) and gates:
+            lines.append("- benchmark gates:")
+            lines.append(f"  - passed: {gates.get('passed')}")
+            gate_results = gates.get("results", {})
+            if isinstance(gate_results, dict):
+                for gate_name, gate_payload in sorted(gate_results.items()):
+                    if not isinstance(gate_payload, dict):
+                        continue
+                    lines.append(
+                        "  - {name}: target={target} actual={actual} passed={passed}".format(
+                            name=gate_name,
+                            target=gate_payload.get("target"),
+                            actual=gate_payload.get("actual"),
+                            passed=gate_payload.get("passed"),
+                        )
+                    )
         lines.append("")
         lines.append("## 关键产物")
         for label, path in [

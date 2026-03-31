@@ -23,9 +23,9 @@ class RecoveryValidationResult:
 
 
 class RecoveryValidator:
-    def __init__(self, output_dir: str | Path, target_package: str) -> None:
+    def __init__(self, output_dir: str | Path, target_app_id: str) -> None:
         self.output_dir = Path(output_dir)
-        self.target_package = target_package
+        self.target_app_id = target_app_id
         self.recovery_dir = self.output_dir / "recovery"
         self.recovery_dir.mkdir(parents=True, exist_ok=True)
         self.validation_file = self.recovery_dir / "recovery_validation.jsonl"
@@ -39,7 +39,7 @@ class RecoveryValidator:
     ) -> RecoveryValidationResult:
         exact_anchor_hit = bool(expected_anchor_state and actual_state.state_id == expected_anchor_state)
         candidate_hit = actual_state.state_id in set(candidate_state_ids)
-        in_target_app = actual_state.package_name == self.target_package
+        in_target_app = actual_state.package_name == self.target_app_id
         result = RecoveryValidationResult(
             validated_at_ms=int(time.time() * 1000),
             expected_anchor_state=expected_anchor_state,

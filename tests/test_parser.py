@@ -25,6 +25,44 @@ def test_parser_marks_permission_and_list_page() -> None:
     assert "list_page" in parsed.app_flags
 
 
+def test_parser_ios_rules_detect_permission_controller_and_settings() -> None:
+    xml = '''
+    <XCUIElementTypeApplication type="XCUIElementTypeApplication" bundleId="com.apple.springboard" x="0" y="0" width="1170" height="2532" enabled="true" visible="true">
+      <XCUIElementTypeWindow type="XCUIElementTypeWindow" bundleId="com.apple.springboard" x="0" y="0" width="1170" height="2532" enabled="true" visible="true">
+        <XCUIElementTypeButton type="XCUIElementTypeButton" label="Allow" bundleId="com.apple.springboard" x="700" y="1800" width="300" height="100" enabled="true" visible="true" />
+        <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" label="Loading" bundleId="com.apple.preferences" x="100" y="300" width="800" height="60" enabled="true" visible="true" />
+      </XCUIElementTypeWindow>
+    </XCUIElementTypeApplication>
+    '''
+    parser = HierarchyParser(platform="ios")
+    parsed = parser.parse(xml)
+
+    assert "permission_controller" in parsed.system_flags
+    assert "settings" in parsed.system_flags
+    assert "permission_like" in parsed.popup_flags
+    assert "loading" in parsed.app_flags
+
+
+def test_parser_ios_reads_standard_xcui_attributes() -> None:
+    xml = '''
+    <XCUIElementTypeApplication type="XCUIElementTypeApplication" bundleId="com.demo.ios" x="0" y="0" width="420" height="912" enabled="true" visible="true">
+      <XCUIElementTypeWindow type="XCUIElementTypeWindow" x="0" y="0" width="420" height="912" enabled="true" visible="true">
+        <XCUIElementTypeTextField type="XCUIElementTypeTextField" name="手机号" label="手机号" x="20" y="200" width="380" height="44" enabled="true" visible="true" />
+        <XCUIElementTypeButton type="XCUIElementTypeButton" name="登录" label="登录" x="20" y="280" width="380" height="44" enabled="true" visible="true" />
+      </XCUIElementTypeWindow>
+    </XCUIElementTypeApplication>
+    '''
+    parser = HierarchyParser(platform="ios")
+    parsed = parser.parse(xml)
+
+    assert len(parsed.elements) >= 3
+    text_field = next(item for item in parsed.elements if "textfield" in item.class_name.lower())
+    button = next(item for item in parsed.elements if "button" in item.class_name.lower())
+    assert text_field.editable is True
+    assert button.clickable is True
+    assert text_field.visible_bounds == (20, 200, 400, 244)
+
+
 def test_parser_marks_form_page_from_editable_fields() -> None:
     xml = '''
     <hierarchy>

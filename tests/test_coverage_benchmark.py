@@ -39,9 +39,21 @@ def test_coverage_benchmark_generates_current_and_comparison(tmp_path: Path) -> 
                     "changed": True,
                     "out_of_app": False,
                     "timestamp_ms": 1_000,
+                    "platform": "android",
+                    "run_profile": "monkey_compatible",
                     "crash_stress_mode": True,
                     "crash_stress_burst_active": True,
                     "crash_signal": True,
+                    "monkey_mode": True,
+                    "monkey_escape_boosted": True,
+                    "monkey_risk_cooldown_applied": False,
+                    "monkey_diversity_boosted": True,
+                    "monkey_ios_tuning_applied": False,
+                    "monkey_ios_permission_fastpath_applied": False,
+                    "permission_like_state": False,
+                    "monkey_ios_recovery_grace_active": False,
+                    "monkey_out_of_app_streak": 0,
+                    "monkey_same_state_streak": 0,
                 },
                 {
                     "step": 1,
@@ -51,9 +63,21 @@ def test_coverage_benchmark_generates_current_and_comparison(tmp_path: Path) -> 
                     "changed": True,
                     "out_of_app": False,
                     "timestamp_ms": 31_000,
+                    "platform": "android",
+                    "run_profile": "monkey_compatible",
                     "crash_stress_mode": True,
                     "crash_stress_burst_active": False,
                     "crash_signal": False,
+                    "monkey_mode": True,
+                    "monkey_escape_boosted": False,
+                    "monkey_risk_cooldown_applied": True,
+                    "monkey_diversity_boosted": False,
+                    "monkey_ios_tuning_applied": False,
+                    "monkey_ios_permission_fastpath_applied": False,
+                    "permission_like_state": False,
+                    "monkey_ios_recovery_grace_active": False,
+                    "monkey_out_of_app_streak": 0,
+                    "monkey_same_state_streak": 1,
                 },
                 {
                     "step": -1,
@@ -67,8 +91,20 @@ def test_coverage_benchmark_generates_current_and_comparison(tmp_path: Path) -> 
                             "exploration_rate": 0.4,
                             "average_reward": 0.6,
                             "top_arms": [{"arm_key": "x", "count": 3, "avg_reward": 0.7}],
-                        }
+                        },
+                        "sidecar_monkey": {
+                            "enabled": True,
+                            "last_exit_code": 0,
+                        },
                     },
+                },
+                {
+                    "step": -1,
+                    "sidecar_monkey_batch": True,
+                    "sidecar_success": True,
+                    "sidecar_recovered_to_target": False,
+                    "sidecar_recovery_failed": False,
+                    "sidecar_events_injected": 20,
                 },
             ],
         )
@@ -115,9 +151,19 @@ def test_coverage_benchmark_generates_current_and_comparison(tmp_path: Path) -> 
                 "changed": False,
                 "out_of_app": True,
                 "timestamp_ms": 1_000,
+                "platform": "android",
+                "run_profile": "monkey_compatible",
                 "crash_stress_mode": False,
                 "crash_stress_burst_active": False,
                 "crash_signal": False,
+                "monkey_mode": True,
+                "monkey_escape_boosted": False,
+                "monkey_risk_cooldown_applied": False,
+                "monkey_diversity_boosted": False,
+                "monkey_ios_tuning_applied": False,
+                "monkey_ios_permission_fastpath_applied": False,
+                "permission_like_state": False,
+                "monkey_ios_recovery_grace_active": False,
             },
             {"step": -1, "recovery_strategy": "restart_app", "recovery_validation_in_target_app": False},
         ],
@@ -136,6 +182,20 @@ def test_coverage_benchmark_generates_current_and_comparison(tmp_path: Path) -> 
     assert payload["current_run"]["crash_per_1k_actions"] == 500.0
     assert payload["current_run"]["burst_step_ratio"] == 0.5
     assert payload["current_run"]["time_to_first_crash_steps"] == 0
+    assert payload["current_run"]["monkey_step_ratio"] == 1.0
+    assert payload["current_run"]["monkey_escape_boosted_ratio"] == 0.5
+    assert payload["current_run"]["monkey_risk_cooldown_ratio"] == 0.5
+    assert payload["current_run"]["monkey_diversity_boosted_ratio"] == 0.5
+    assert payload["current_run"]["monkey_ios_permission_fastpath_ratio"] == 0.0
+    assert payload["current_run"]["monkey_max_same_state_streak"] == 1
     assert payload["current_run"]["learning_exploration_rate"] == 0.4
     assert payload["current_run"]["learning_average_reward"] == 0.6
     assert payload["current_run"]["learning_top_arms"][0]["arm_key"] == "x"
+    assert payload["targets"]["unique_states_growth_vs_baseline"] == 1.25
+    assert payload["targets"]["sidecar_batch_count_min"] == 1
+    assert payload["targets"]["sidecar_success_rate_min"] == 0.95
+    assert payload["targets"]["sidecar_recovery_failure_rate_max"] == 0.2
+    assert payload["gates"]["results"]["sidecar_batch_count_min"]["passed"] is True
+    assert payload["gates"]["results"]["sidecar_success_rate_min"]["passed"] is True
+    assert payload["gates"]["results"]["sidecar_recovery_failure_rate_max"]["passed"] is True
+    assert payload["gates"]["passed"] is True

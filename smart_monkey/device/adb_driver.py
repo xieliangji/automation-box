@@ -5,6 +5,8 @@ import subprocess
 import time
 from pathlib import Path
 
+from smart_monkey.device.capabilities import DriverCapabilities
+
 
 class AdbDriver:
     def __init__(
@@ -47,6 +49,16 @@ class AdbDriver:
             token = output.split()[-1]
             return token.split("/")[0]
         return ""
+
+    def capabilities(self) -> DriverCapabilities:
+        return DriverCapabilities(
+            platform="android",
+            supports_launch_target=True,
+            supports_press_back=True,
+            supports_press_home=True,
+            supports_stop_app=True,
+            supports_log_stream=False,
+        )
 
     def get_current_activity(self) -> str | None:
         output = self._shell("dumpsys window | grep mCurrentFocus", check=False)
