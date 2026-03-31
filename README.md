@@ -4,15 +4,11 @@
 
 项目目标不是简单随机发事件，而是围绕 **状态识别、候选动作提取、动作打分、UTG 状态图、回溯恢复** 建立可持续演进的智能探索框架。
 
-## 单一路径说明
+## 运行入口
 
-当前仓库已收敛为 **唯一运行路径**：
-
-- 统一入口：`main.py`
-- 统一运行主类：`smart_monkey/app_runtime.py::SmartMonkeyAppRuntime`
-- 统一输出目录：`output/run/`
-
-历史并行入口/运行变体已清理，不再维护多入口执行路径。
+- 入口：`main.py`
+- 运行主类：`smart_monkey/app_runtime.py::SmartMonkeyAppRuntime`
+- 默认输出目录：`output/run/`
 
 打包元数据说明：
 
