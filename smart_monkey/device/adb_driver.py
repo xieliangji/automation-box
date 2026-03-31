@@ -34,7 +34,7 @@ class AdbDriver:
         cmd = [*self._base_cmd(), *args]
         timeout = self.command_timeout_sec if timeout_sec is None else timeout_sec
         try:
-            return subprocess.run(cmd, check=check, text=True, capture_output=True, timeout=timeout)
+            return subprocess.run(cmd, check=check, text=True, capture_output=True, timeout=timeout, encoding='utf-8')
         except subprocess.TimeoutExpired as exc:
             joined = " ".join(cmd)
             raise RuntimeError(f"ADB command timed out after {timeout}s: {joined}") from exc
