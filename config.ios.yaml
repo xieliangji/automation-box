@@ -1,94 +1,200 @@
-app:
-  platform: ios
-  target_app_id: com.ugreen.iot
-  launch_target: .ui.SplashActivity
-  package_name: com.ugreen.iot
-  launch_activity: .ui.SplashActivity
+# ============================================================
+# Smart Monkey Runtime Config
+# ============================================================
+# 说明：
+# - 建议优先维护平台中性字段：app.target_app_id / app.launch_target
+# - app.package_name / app.launch_activity 为兼容字段，建议与上面两项保持一致
+# - 运行前按平台选择配置：
+#   cp config.android.yaml config.yaml   # Android
+#   cp config.ios.yaml config.yaml       # iOS
 
+# ============================================================
+# app: 目标应用与平台设置
+# ============================================================
+app:
+  # 运行平台：android 或 ios
+  platform: ios
+  # 平台中性目标应用ID（Android=包名，iOS=bundle id）
+  target_app_id: com.ugreen.iot
+  # 启动目标（Android=Activity；iOS=可选启动参数/页面）
+  launch_target: ".ui.SplashActivity"
+  # 兼容字段：等价于 target_app_id
+  package_name: com.ugreen.iot
+  # 兼容字段：等价于 launch_target
+  launch_activity: ".ui.SplashActivity"
+
+# ============================================================
+# ios: iOS 驱动连接参数（仅 app.platform=ios 时生效）
+# ============================================================
 ios:
+  # WebDriverAgent 服务地址
   wda_url: "http://localhost:8100"
+  # 创建会话超时（秒）
   session_create_timeout_sec: 30
+  # 单命令请求超时（秒）
   command_timeout_sec: 20
+  # 请求重试次数
   request_retry: 2
+  # 运行结束是否保留会话
   keep_session: true
+  # 会话失效时是否自动重建
   auto_recreate_session: true
+  # 指定设备 UDID（空字符串表示自动）
   udid: ""
 
+# ============================================================
+# run: 运行时全局参数
+# ============================================================
 run:
+  # 主循环步数上限
   max_steps: 300
+  # 每步动作后的默认等待（毫秒）
   post_action_wait_ms: 700
+  # 随机种子（保证可复现）
   seed: 12345
+  # baseline 目录（用于 benchmark A/B 对比；空表示不对比）
   benchmark_baseline_dir: ""
+  # 运行档位：functional / crash_stress / monkey_compatible
   profile: functional
+  # crash_stress 模式等待（毫秒）
   crash_stress_wait_ms: 200
+  # crash_stress burst 触发概率（0~1）
   crash_stress_burst_probability: 0.25
+  # crash_stress burst 最少连续步数
   crash_stress_burst_min_steps: 2
+  # crash_stress burst 最多连续步数
   crash_stress_burst_max_steps: 5
+  # monkey_compatible 模式等待（Android，毫秒）
   monkey_wait_ms: 400
+  # monkey_compatible 模式等待（iOS，毫秒）
   monkey_ios_wait_ms: 260
 
+# ============================================================
+# policy: 动作选择与恢复策略
+# ============================================================
 policy:
+  # epsilon-greedy 探索率（0~1）
   epsilon: 0.2
+  # 参与抽样的前 K 个候选动作
   top_k: 5
+  # 无进展阈值（触发恢复判断）
   no_progress_threshold: 8
+  # 同状态停留阈值（触发恢复判断）
   same_state_threshold: 5
+  # 连续越界阈值（触发恢复判断）
   out_of_app_threshold: 2
+  # 是否启用输入类动作
   enable_text_input: true
+  # 是否启用长按动作
   enable_long_click: true
+  # 是否启用双指缩放动作
   enable_pinch: true
+  # 缩放上下文命中时的加分
   pinch_zoom_context_boost: 0.45
+  # 非缩放上下文下的惩罚
   pinch_non_zoom_penalty: 0.6
+  # 是否允许 restart_app 动作
   enable_restart_app: true
+  # 是否启用会话护栏（抑制高风险路径）
   enable_session_guardrails: true
+  # 是否启用登录引导
   enable_login_bootstrap: false
+  # 登录用户名（开启登录引导时使用）
   bootstrap_username: ""
+  # 登录密码（开启登录引导时使用）
   bootstrap_password: ""
+  # 登录引导最大尝试次数
   bootstrap_max_attempts: 3
+  # 登录引导最小重试间隔步数
   bootstrap_retry_interval_steps: 20
+  # 是否优先功能页探索
   prefer_functional_pages: true
+
+  # monkey_compatible：越界 streak 阈值
   monkey_out_of_app_streak_threshold: 2
+  # monkey_compatible：循环 streak 阈值
   monkey_loop_streak_threshold: 3
+  # monkey_compatible：扰动加分
   monkey_perturb_boost: 2.0
+  # monkey_compatible：高风险冷却窗口（步）
   monkey_risk_cooldown_steps: 3
+  # monkey_compatible：高风险惩罚
   monkey_risk_penalty: 2.5
+  # monkey_compatible：随机抖动幅度
   monkey_score_jitter: 0.35
+  # monkey_compatible：重复状态阈值
   monkey_diversity_state_repeat_threshold: 2
+  # monkey_compatible：重复状态惩罚
   monkey_diversity_state_repeat_penalty: 0.6
+  # monkey_compatible：新动作加分
   monkey_diversity_novel_action_boost: 0.8
+  # monkey_compatible：前沿探索加分
   monkey_diversity_frontier_boost: 0.6
+
+  # iOS monkey：权限快路径开关
   monkey_ios_permission_fastpath: true
+  # iOS monkey：权限“允许”动作加分
   monkey_ios_permission_boost: 2.2
+  # iOS monkey：restart_app 惩罚
   monkey_ios_restart_penalty: 1.8
+  # iOS monkey：back 动作惩罚
   monkey_ios_back_penalty: 0.5
+  # iOS monkey：swipe 加分
   monkey_ios_swipe_boost: 0.6
+  # iOS monkey：列表页 swipe 额外加分
   monkey_ios_list_swipe_boost: 0.8
+  # iOS monkey：pinch 加分
   monkey_ios_pinch_boost: 0.5
+  # iOS monkey：静态文本点击惩罚
   monkey_ios_static_text_click_penalty: 1.0
+  # iOS monkey：Cell 点击加分
   monkey_ios_cell_click_boost: 0.7
+  # iOS monkey：返回/关闭类点击惩罚
   monkey_ios_back_like_click_penalty: 1.1
+  # iOS monkey：外部跳转（相册/拍照等）惩罚
   monkey_ios_external_jump_penalty: 2.0
+  # iOS monkey：恢复触发的 stuck 阈值
   monkey_ios_recovery_stuck_threshold: 10
+  # iOS monkey：恢复触发的同态阈值
   monkey_ios_same_state_recovery_threshold: 3
+  # iOS monkey：权限后恢复缓冲窗口（步）
   monkey_ios_permission_recovery_grace_steps: 3
 
+# ============================================================
+# score_weights: 规则打分权重
+# ============================================================
 score_weights:
+  # 新颖性权重
   novelty: 2.0
+  # 转移价值权重
   transition: 2.5
+  # 深度探索权重
   depth: 1.8
+  # 业务价值权重
   business: 1.4
+  # 脱困动作权重
   escape: 2.2
+  # 输入动作权重
   input: 1.2
+  # 重复惩罚权重
   repeat: 2.4
+  # 风险惩罚权重
   risk: 3.0
+  # 卡死惩罚权重
   stuck: 2.6
 
+# ============================================================
+# safety: 风险词策略
+# ============================================================
 safety:
+  # 黑名单关键词（命中后降低/抑制危险动作）
   blacklist_keywords:
     - 删除
     - 恢复出厂
     - 付款
     - 购买
     - 退出登录
+  # 白名单关键词（关键流程可提升优先级）
   whitelist_keywords:
     - 下一步
     - 继续
@@ -98,48 +204,97 @@ safety:
     - 登录
     - 保存
 
+# ============================================================
+# snapshot: 快照采样策略
+# ============================================================
 snapshot:
+  # 是否启用周期性快照
   enabled: true
+  # 每 N 步采样一次
   every_n_steps: 10
+  # 发现 issue 时是否额外快照
   on_issue: true
 
+# ============================================================
+# features: 运行时功能开关
+# ============================================================
 features:
+  # 使用 RuntimeActionExtractor
   use_runtime_extractor: true
+  # 使用 RuntimeActionScorer
   use_runtime_scorer: true
+  # 启用 watchdog
   enable_watchdog: true
+  # 导出 replay 产物
   export_replay: true
 
+# ============================================================
+# learning: 在线学习（UCB）
+# ============================================================
 learning:
+  # 是否启用学习层
   enabled: false
+  # 规则分与学习分混合系数（0~1）
   alpha: 0.8
+  # UCB 探索强度
   ucb_exploration: 1.2
+  # 是否持久化学习状态
   persistence_enabled: false
+  # 学习状态文件路径
   state_path: "output/learning_state.json"
+  # 最小观测数（达到后才持久化）
   min_observations_to_persist: 20
+  # 是否按模块进行 arm 聚类
   module_bucket_enabled: true
+  # 状态变化奖励
   reward_changed_state: 1.0
+  # 新状态奖励
   reward_novel_state: 0.3
+  # 功能页奖励
   reward_functional_page: 0.4
+  # issue 信号奖励
   reward_issue_signal: 0.8
+  # 越界惩罚
   penalty_out_of_app: 1.0
+  # 无变化惩罚
   penalty_unchanged: 0.2
+  # 近期循环惩罚
   penalty_recent_loop: 0.25
+  # 系统动作惩罚
   penalty_system_action: 0.15
+  # 报告展示 top arm 数量
   top_arms_report_limit: 5
 
+# ============================================================
+# sidecar.monkey: Android 官方 monkey 双轨
+# ============================================================
 sidecar:
   monkey:
+    # 是否启用 sidecar（仅 Android 生效）
     enabled: false
+    # 每 N 个主轨 step 触发 1 批 sidecar
     step_interval: 15
+    # 单次运行 sidecar 最大批次数
     max_batches: 4
+    # 每批注入事件数
     events_per_batch: 35
+    # 官方 monkey 节流（毫秒）
     throttle_ms: 20
+    # 随机种子偏移（与 run.seed 组合）
     seed_offset: 1000
+    # 触摸事件占比
     pct_touch: 45
+    # 运动事件占比
     pct_motion: 15
+    # 导航事件占比
     pct_nav: 35
+    # 系统键事件占比
     pct_syskeys: 5
+    # 忽略 crash 异常
     ignore_crashes: true
+    # 忽略 timeout 异常
     ignore_timeouts: true
+    # 忽略安全异常
     ignore_security_exceptions: true
+    # 执行 monkey 命令超时（秒）
     adb_timeout_sec: 30
