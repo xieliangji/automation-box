@@ -7,4 +7,5 @@ output
 .DS_Store
 __pycache__/
 *.pyc
+*.egg-info/
 config.yaml
